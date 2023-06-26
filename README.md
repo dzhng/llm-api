@@ -2,7 +2,7 @@
 
 [![test](https://github.com/dzhng/llm-api/actions/workflows/test.yml/badge.svg?branch=main&event=push)](https://github.com/dzhng/llm-api/actions/workflows/test.yml)
 
-Get structured, fully typed JSON outputs from OpenAI's new 0613 models via functions.
+Fully typed chat APIs for OpenAI and Azure's chat models - with token checking and retries
 
 - [Introduction](#-introduction)
 - [Usage](#-usage)
@@ -118,14 +118,14 @@ interface ModelResponse {
 
 ### 📃 Token Errors
 
-A common error with LLM APIs is token usage - you are only allowed to fit a certain amount of data in the context window. In the case of ZodGPT, this means you are limited in the length of the content of the messages.
+A common error with LLM APIs is token usage - you are only allowed to fit a certain amount of data in the context window.
 
-If you set a `contextSize` key, ZodGPT will automatically determine if the request will breach the token limit BEFORE sending the actual request to the model provider (e.g. OpenAI). This will save one network round-trip call and let you handle these type of errors in a responsive manner.
+If you set a `contextSize` key, `llm-api` will automatically determine if the request will breach the token limit BEFORE sending the actual request to the model provider (e.g. OpenAI). This will save one network round-trip call and let you handle these type of errors in a responsive manner.
 
 ```typescript
 const openai = new OpenAIChatApi(
   { apiKey: 'YOUR_OPENAI_KEY' },
-  { model: 'gpt-4-0613' },
+  { model: 'gpt-4-0613', contextSize: 8129 },
 );
 
 try {
@@ -155,7 +155,7 @@ const model = new OpenAIChatApi({
 
 ## 🤓 Debugging
 
-ZodGPT usese the `debug` module for logging & error messages. To run in debug mode, set the `DEBUG` env variable:
+`llm-api` usese the `debug` module for logging & error messages. To run in debug mode, set the `DEBUG` env variable:
 
 `DEBUG=llm-api:* yarn playground`
 
