@@ -1,6 +1,6 @@
 {
   "name": "llm-api",
-  "description": "Chat and completion APIs for OpenAI and Azure's chat models - with token checking and retries",
+  "description": "Fully typed chat APIs for OpenAI and Azure's chat models - with token checking and retries",
   "version": "0.1.0",
   "packageManager": "yarn@3.4.1",
   "main": "dist/src/index.js",
