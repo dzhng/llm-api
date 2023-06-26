@@ -64,5 +64,5 @@ export type ModelResponse = {
   };
 
   // function to send another message in the same chat, this will automatically reuse all existing settings, and append a new message to the messages array
-  respond: (prompt: string, opt: ModelRequestOptions) => Promise<ModelResponse>;
+  respond: (message: any, opt?: ModelRequestOptions) => Promise<ModelResponse>;
 };

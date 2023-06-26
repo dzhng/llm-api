@@ -50,6 +50,13 @@ const convertConfig = (
   stream: config.stream,
 });
 
+interface Response extends ModelResponse {
+  respond: (
+    message: ChatCompletionRequestMessage,
+    opt?: ModelRequestOptions,
+  ) => Promise<Response>;
+}
+
 export class OpenAIChatApi implements CompletionApi {
   _model: OpenAIApi;
   _isAzure: boolean;
@@ -118,8 +125,8 @@ export class OpenAIChatApi implements CompletionApi {
   // eslint-disable-next-line complexity
   async chatCompletion(
     messages: ChatCompletionRequestMessage[],
-    requestOptions: ModelRequestOptions,
-  ): Promise<ModelResponse> {
+    requestOptions = {} as Partial<ModelRequestOptions>,
+  ): Promise<Response> {
     const finalRequestOptions = defaults(requestOptions, RequestDefaults);
     debug.log(
       `🔼 completion requested: ${JSON.stringify(
@@ -245,13 +252,9 @@ export class OpenAIChatApi implements CompletionApi {
 
       if (content) {
         return {
-          respond: (prompt, opt) =>
+          respond: (message: ChatCompletionRequestMessage, opt) =>
             this.chatCompletion(
-              [
-                ...messages,
-                { role: 'assistant', content },
-                { role: 'user', content: prompt },
-              ],
+              [...messages, { role: 'assistant', content }, message],
               opt,
             ),
           content,
@@ -265,12 +268,16 @@ export class OpenAIChatApi implements CompletionApi {
         };
       } else if (functionCall) {
         return {
-          respond: (prompt, opt) =>
+          respond: (message: ChatCompletionRequestMessage, opt) =>
             this.chatCompletion(
               [
                 ...messages,
-                { role: 'assistant', function_call: functionCall },
-                { role: 'user', content: prompt },
+                {
+                  role: 'assistant',
+                  content: '', // explicitly put empty string, or api will complain it's required property
+                  function_call: functionCall,
+                },
+                message,
               ],
               opt,
             ),
@@ -318,7 +325,7 @@ export class OpenAIChatApi implements CompletionApi {
   async textCompletion(
     prompt: string,
     requestOptions = {} as Partial<ModelRequestOptions>,
-  ): Promise<ModelResponse> {
+  ): Promise<Response> {
     const messages: ChatCompletionRequestMessage[] = compact([
       requestOptions.systemMessage
         ? {
