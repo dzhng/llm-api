@@ -2,7 +2,7 @@
 
 [![test](https://github.com/dzhng/llm-api/actions/workflows/test.yml/badge.svg?branch=main&event=push)](https://github.com/dzhng/llm-api/actions/workflows/test.yml)
 
-Fully typed chat APIs for OpenAI and Azure's chat models - with token checking and retries
+Fully typed chat APIs for OpenAI and Azure's chat models for browser, edge, and node environments.
 
 - [Introduction](#-introduction)
 - [Usage](#-usage)
@@ -13,7 +13,8 @@ Fully typed chat APIs for OpenAI and Azure's chat models - with token checking a
 
 - Clean interface for text and chat completion for OpenAI and Azure models
 - Catch token overflow errors automatically on the client side
-- Handle rate limit and any other API errors as gracefully as possible (e.g. exponential backoff for rate-limit).
+- Handle rate limit and any other API errors as gracefully as possible (e.g. exponential backoff for rate-limit)
+- Support for browser, edge, and node environments
 
 ```typescript
 import { OpenAIChatApi } from 'llm-api';
