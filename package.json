@@ -1,0 +1,80 @@
+{
+  "name": "llm-api",
+  "description": "Chat and completion APIs for OpenAI and Azure's chat models - with token checking and retries",
+  "version": "0.1.0",
+  "packageManager": "yarn@3.4.1",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "typescript",
+    "gpt",
+    "chatgpt",
+    "llama",
+    "llm",
+    "ai",
+    "ml",
+    "prompt",
+    "prompt engineering",
+    "openai"
+  ],
+  "author": "David Zhang <david@aomni.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/dzhng/llm-api",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/dzhng/llm-api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dzhng/llm-api/issues"
+  },
+  "scripts": {
+    "setup": "husky install",
+    "build": "tsc --build --pretty",
+    "lint": "eslint src --ext ts,tsx,js,jsx --ignore-path .gitignore --fix",
+    "test": "jest --passWithNoTests",
+    "test:update": "jest -u --passWithNoTests",
+    "playground": "node -r tsconfig-paths/register -r ts-node/register playground"
+  },
+  "dependencies": {
+    "debug": "^4.3.4",
+    "js-tiktoken": "^1.0.7",
+    "jsonic": "^1.0.1",
+    "jsonrepair": "^3.2.0",
+    "lodash": "^4.17.21",
+    "openai-edge": "^1.1.0"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.7",
+    "@types/jest": "^29.5.0",
+    "@types/jsonic": "^0.3.1",
+    "@types/lodash": "^4.14.191",
+    "eslint": "^8.36.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-config-universe": "^11.1.1",
+    "eslint-import-resolver-typescript": "^3.3.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "husky": "^8.0.2",
+    "jest": "^29.5.0",
+    "lint-staged": "^13.2.0",
+    "prettier": "^2.8.0",
+    "ts-jest": "^29.0.5",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.2"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --ext ts,tsx,js,jsx --fix --ignore-path .gitignore ",
+      "prettier --write"
+    ],
+    "*.{json,md,css,scss}": [
+      "prettier --write"
+    ]
+  }
+}
