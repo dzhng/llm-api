@@ -74,9 +74,12 @@ interface ModelConfig {
 To send a completion request to a model:
 
 ```typescript
-const res: ModelResponse = await openai.textCompletion(api: CompletionApi, prompt: string, options: ModelRequestOptions);
+const text: ModelResponse = await openai.textCompletion(api: CompletionApi, prompt: string, options: ModelRequestOptions);
 
-const res: ModelResponse = await openai.chatCompletion(api: CompletionApi, messages: ChatCompletionRequestMessage, options: ModelRequestOptions);
+const completion: ModelResponse = await openai.chatCompletion(api: CompletionApi, messages: ChatCompletionRequestMessage, options: ModelRequestOptions);
+
+// respond to existing chat session, preserving the past messages
+const response: ModelResponse = await completion.respond(message: ChatCompletionRequestMessage, options: ModelRequestOptions);
 ```
 
 **options**
@@ -120,6 +123,12 @@ interface ModelResponse {
     completionTokens: number;
     totalTokens: number;
   };
+
+  // function to send another message in the same 'chat', this will automatically append a new message to the messages array
+  respond: (
+    message: ChatCompletionRequestMessage,
+    opt?: ModelRequestOptions,
+  ) => Promise<ModelResponse>;
 }
 ```
 

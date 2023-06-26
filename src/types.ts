@@ -53,7 +53,6 @@ export type ModelRequestOptions = {
 };
 
 export type ModelResponse = {
-  // raw response from the completion API
   content?: string;
   name?: string;
   arguments?: string;
