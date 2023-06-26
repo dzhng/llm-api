@@ -44,6 +44,12 @@ yarn add llm-api
 
 ### Model Config
 
+To configure a new model endpoint:
+
+```typescript
+const openai = new OpenAIChatApi(params: OpenAIConfigurationParameters, config: ModelConfig);
+```
+
 These model config map to OpenAI's config directly, see doc:
 https://platform.openai.com/docs/api-reference/chat/create
 
@@ -67,9 +73,9 @@ interface ModelConfig {
 To send a completion request to a model:
 
 ```typescript
-const res: ModelResponse = await textCompletion(api: CompletionApi, prompt: string, options: ModelRequestOptions);
+const res: ModelResponse = await openai.textCompletion(api: CompletionApi, prompt: string, options: ModelRequestOptions);
 
-const res: ModelResponse = await chatCompletion(api: CompletionApi, messages: ChatCompletionRequestMessage, options: ModelRequestOptions);
+const res: ModelResponse = await openai.chatCompletion(api: CompletionApi, messages: ChatCompletionRequestMessage, options: ModelRequestOptions);
 ```
 
 **options**
@@ -77,7 +83,7 @@ You can override the default request options via this parameter. A request will 
 
 ```typescript
 type ModelRequestOptions = {
-  // set to automatically add system message (only relevant when using textCompletion on a chat API)
+  // set to automatically add system message (only relevant when using textCompletion)
   systemMessage?: string | (() => string);
 
   // function to pass into context on OpenAI's new 0613 models
