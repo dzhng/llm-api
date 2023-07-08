@@ -48,7 +48,8 @@ yarn add llm-api
 To configure a new model endpoint:
 
 ```typescript
-const openai = new OpenAIChatApi(params: OpenAIConfigurationParameters, config: ModelConfig);
+const openai = new OpenAIChatApi(params: OpenAIConfig, config: ModelConfig);
+const anthropic = new AnthropicChatApi(params: AnthropicConfig, config: ModelConfig);
 ```
 
 These model config map to OpenAI's config directly, see doc:

@@ -1,7 +1,12 @@
+import Anthropic from '@anthropic-ai/sdk';
 import EventEmitter from 'events';
-import { ConfigurationParameters } from 'openai-edge';
+import { ConfigurationParameters as OAIConfig } from 'openai-edge';
 
-export type OpenAIConfigurationParameters = ConfigurationParameters & {
+export type AnthropicConfig = NonNullable<
+  ConstructorParameters<typeof Anthropic>[0]
+>;
+
+export type OpenAIConfig = OAIConfig & {
   azureEndpoint?: string;
   azureDeployment?: string;
 };

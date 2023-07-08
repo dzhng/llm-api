@@ -16,7 +16,7 @@ import {
 import type {
   ModelRequestOptions,
   ModelConfig,
-  OpenAIConfigurationParameters,
+  OpenAIConfig,
   ModelFunction,
   ModelResponse,
 } from '../types';
@@ -63,10 +63,7 @@ export class OpenAIChatApi implements CompletionApi {
   _headers?: Record<string, string>;
   modelConfig: ModelConfig;
 
-  constructor(
-    config: OpenAIConfigurationParameters,
-    modelConfig?: ModelConfig,
-  ) {
+  constructor(config: OpenAIConfig, modelConfig?: ModelConfig) {
     this._isAzure = Boolean(config.azureEndpoint && config.azureDeployment);
 
     const configuration = new Configuration({

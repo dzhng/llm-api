@@ -42,6 +42,7 @@
     "playground": "node -r tsconfig-paths/register -r ts-node/register playground"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.5.2",
     "debug": "^4.3.4",
     "js-tiktoken": "^1.0.7",
     "jsonic": "^1.0.1",
