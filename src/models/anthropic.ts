@@ -1,4 +1,4 @@
-import { AI_PROMPT, Anthropic, HUMAN_PROMPT } from '@anthropic-ai/sdk';
+import Anthropic, { AI_PROMPT, HUMAN_PROMPT } from '@anthropic-ai/sdk';
 import { compact, defaults } from 'lodash';
 
 import {
@@ -46,14 +46,6 @@ export class AnthropicChatApi implements CompletionApi {
     requestOptions?: ModelRequestOptions | undefined,
   ): Promise<ChatResponse> {
     const finalRequestOptions = defaults(requestOptions, RequestDefaults);
-    debug.log(
-      `🔼 completion requested: ${JSON.stringify(
-        messages,
-      )}, config: ${JSON.stringify(
-        this.modelConfig,
-      )}, options: ${JSON.stringify(finalRequestOptions)}`,
-    );
-
     const prompt =
       messages
         .map((message) => {
@@ -71,6 +63,12 @@ export class AnthropicChatApi implements CompletionApi {
           }
         })
         .join('') + AI_PROMPT;
+
+    debug.log(
+      `🔼 completion requested:\n${prompt}\nconfig: ${JSON.stringify(
+        this.modelConfig,
+      )}, options: ${JSON.stringify(finalRequestOptions)}`,
+    );
 
     // check if we'll have enough tokens to meet the minimum response
     const maxPromptTokens = this.modelConfig.contextSize
@@ -103,7 +101,7 @@ export class AnthropicChatApi implements CompletionApi {
       },
     );
 
-    const content = response.completion;
+    const content = response.completion.trim();
     if (!content) {
       throw new Error('Completion response malformed');
     }
