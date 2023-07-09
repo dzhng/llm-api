@@ -154,7 +154,7 @@ export class AnthropicChatApi implements CompletionApi {
               ? { role: 'user', content: message }
               : message,
           ],
-          opt,
+          opt ?? requestOptions,
         ),
     };
   }
