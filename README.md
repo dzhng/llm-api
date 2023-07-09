@@ -7,6 +7,7 @@ Fully typed chat APIs for OpenAI, Anthropic, and Azure's chat models for browser
 - [Introduction](#-introduction)
 - [Usage](#-usage)
 - [Azure](#-azure)
+- [Anthropic](#-anthropic)
 - [Debugging](#-debugging)
 
 ## 👋 Introduction
