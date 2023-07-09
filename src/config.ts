@@ -5,4 +5,4 @@ export const CompletionDefaultTimeout = 300_000;
 export const MinimumResponseTokens = 200;
 
 export const DefaultOpenAIModel = 'gpt-3.5-turbo';
-export const DefaultAnthropicModel = 'claude-instant-v1';
+export const DefaultAnthropicModel = 'claude-instant-1-100k';

@@ -2,7 +2,7 @@
 
 [![test](https://github.com/dzhng/llm-api/actions/workflows/test.yml/badge.svg?branch=main&event=push)](https://github.com/dzhng/llm-api/actions/workflows/test.yml)
 
-Fully typed chat APIs for OpenAI and Azure's chat models for browser, edge, and node environments.
+Fully typed chat APIs for OpenAI, Anthropic, and Azure's chat models for browser, edge, and node environments.
 
 - [Introduction](#-introduction)
 - [Usage](#-usage)
@@ -11,7 +11,7 @@ Fully typed chat APIs for OpenAI and Azure's chat models for browser, edge, and 
 
 ## 👋 Introduction
 
-- Clean interface for text and chat completion for OpenAI and Azure models
+- Clean interface for text and chat completion for OpenAI, Anthropic, and Azure models
 - Catch token overflow errors automatically on the client side
 - Handle rate limit and any other API errors as gracefully as possible (e.g. exponential backoff for rate-limit)
 - Support for browser, edge, and node environments
@@ -49,7 +49,6 @@ To configure a new model endpoint:
 
 ```typescript
 const openai = new OpenAIChatApi(params: OpenAIConfig, config: ModelConfig);
-const anthropic = new AnthropicChatApi(params: AnthropicConfig, config: ModelConfig);
 ```
 
 These model config map to OpenAI's config directly, see doc:
@@ -163,11 +162,19 @@ You can find the Azure API key and endpoint in the [Azure Portal](https://portal
 Note that the `model` parameter in `ModelConfig` will be ignored when using Azure. This is because in the Azure system, the `model` is selected on deployment creation, not on run time.
 
 ```typescript
-const model = new OpenAIChatApi({
+const openai = new OpenAIChatApi({
   apiKey: 'AZURE_OPENAI_KEY',
   azureDeployment: 'AZURE_DEPLOYMENT_NAME',
   azureEndpoint: 'AZURE_ENDPOINT',
 });
+```
+
+## 🔶 Anthropic
+
+Anthropic's models have the unique advantage of a large 100k context window and extremely fast performance. If no explicit model is specified, `llm-api` will default to the `claude-instant-1-100k` model.
+
+```typescript
+const anthropic = new AnthropicChatApi(params: AnthropicConfig, config: ModelConfig);
 ```
 
 ## 🤓 Debugging
