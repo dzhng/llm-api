@@ -92,6 +92,7 @@ type ModelRequestOptions = {
   systemMessage?: string | (() => string);
 
   // send a prefix to the model response so the model can continue generating from there, useful for steering the model towards certain output structures.
+  // the response prefix WILL be appended to the model response.
   // for Anthropic's models ONLY
   responsePrefix?: string;
 

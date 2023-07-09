@@ -95,7 +95,7 @@ export class AnthropicChatApi implements CompletionApi {
       AI_PROMPT +
       (finalRequestOptions.responsePrefix
         ? ` ${finalRequestOptions.responsePrefix}`
-        : ' ');
+        : '');
 
     debug.log(
       `🔼 completion requested:\n${prompt}\nconfig: ${JSON.stringify(
@@ -134,7 +134,8 @@ export class AnthropicChatApi implements CompletionApi {
       },
     );
 
-    const content = response.completion.trim();
+    const content =
+      (finalRequestOptions.responsePrefix ?? '') + response.completion;
     if (!content) {
       throw new Error('Completion response malformed');
     }
