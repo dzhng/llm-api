@@ -1,17 +1,22 @@
-import { ModelRequestOptions, ModelResponse, ModelConfig } from '../types';
+import {
+  ModelRequestOptions,
+  ChatResponse,
+  ModelConfig,
+  ChatRequestMessage,
+} from '../types';
 
 export interface CompletionApi {
   modelConfig: ModelConfig;
 
   chatCompletion(
-    messages: any[],
+    messages: ChatRequestMessage[],
     opt?: ModelRequestOptions,
-  ): Promise<ModelResponse>;
+  ): Promise<ChatResponse>;
 
   textCompletion(
     prompt: string,
     opt?: ModelRequestOptions,
-  ): Promise<ModelResponse>;
+  ): Promise<ChatResponse>;
 
   getTokensFromPrompt(promptOrMessages: string[]): number;
 }

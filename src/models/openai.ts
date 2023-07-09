@@ -1,7 +1,5 @@
-import tiktoken from 'js-tiktoken';
 import { compact, defaults } from 'lodash';
 import {
-  ChatCompletionRequestMessage,
   Configuration,
   CreateChatCompletionRequest,
   OpenAIApi,
@@ -10,6 +8,7 @@ import {
 import {
   CompletionDefaultRetries,
   CompletionDefaultTimeout,
+  DefaultOpenAIModel,
   MinimumResponseTokens,
   RateLimitRetryIntervalMs,
 } from '../config';
@@ -17,13 +16,14 @@ import type {
   ModelRequestOptions,
   ModelConfig,
   OpenAIConfig,
-  ModelFunction,
-  ModelResponse,
+  ChatRequestMessage,
+  ChatResponse,
 } from '../types';
 import { debug, parseUnsafeJson, sleep } from '../utils';
 
 import { TokenError } from './errors';
 import type { CompletionApi } from './interface';
+import { getTikTokenTokensFromPrompt } from './tokenizer';
 
 const RequestDefaults = {
   retries: CompletionDefaultRetries,
@@ -32,8 +32,6 @@ const RequestDefaults = {
   minimumResponseTokens: MinimumResponseTokens,
 };
 const AzureQueryParams = { 'api-version': '2023-03-15-preview' };
-
-const encoder = tiktoken.getEncoding('cl100k_base');
 
 const convertConfig = (
   config: Partial<ModelConfig>,
@@ -50,15 +48,8 @@ const convertConfig = (
   stream: config.stream,
 });
 
-interface Response extends ModelResponse {
-  respond: (
-    message: ChatCompletionRequestMessage,
-    opt?: ModelRequestOptions,
-  ) => Promise<Response>;
-}
-
 export class OpenAIChatApi implements CompletionApi {
-  _model: OpenAIApi;
+  _client: OpenAIApi;
   _isAzure: boolean;
   _headers?: Record<string, string>;
   modelConfig: ModelConfig;
@@ -89,7 +80,7 @@ export class OpenAIChatApi implements CompletionApi {
       return fetch(customInput, init);
     };
 
-    this._model = new OpenAIApi(
+    this._client = new OpenAIApi(
       configuration,
       undefined,
       this._isAzure ? azureFetch : undefined,
@@ -98,32 +89,13 @@ export class OpenAIChatApi implements CompletionApi {
     this.modelConfig = modelConfig ?? {};
   }
 
-  getTokensFromPrompt(promptOrMessages: string[], functions?: ModelFunction[]) {
-    let numTokens = 0;
-
-    for (const message of promptOrMessages) {
-      numTokens += 5; // every message follows <im_start>{role/name}\n{content}<im_end>\n
-      numTokens += encoder.encode(message).length;
-    }
-    numTokens += 2; // every reply is primed with <im_start>assistant\n
-
-    if (functions) {
-      for (const func of functions) {
-        numTokens += 5;
-        numTokens += encoder.encode(JSON.stringify(func)).length;
-      }
-      // estimate tokens needed to prime functions
-      numTokens += 20;
-    }
-
-    return numTokens;
-  }
+  getTokensFromPrompt = getTikTokenTokensFromPrompt;
 
   // eslint-disable-next-line complexity
   async chatCompletion(
-    messages: ChatCompletionRequestMessage[],
+    messages: ChatRequestMessage[],
     requestOptions = {} as Partial<ModelRequestOptions>,
-  ): Promise<Response> {
+  ): Promise<ChatResponse> {
     const finalRequestOptions = defaults(requestOptions, RequestDefaults);
     debug.log(
       `🔼 completion requested: ${JSON.stringify(
@@ -156,9 +128,9 @@ export class OpenAIChatApi implements CompletionApi {
         () => controller.abort(),
         finalRequestOptions.timeout,
       );
-      const completion = await this._model.createChatCompletion(
+      const completion = await this._client.createChatCompletion(
         {
-          model: 'gpt-3.5-turbo-0613',
+          model: DefaultOpenAIModel,
           ...convertConfig(this.modelConfig),
           functions: finalRequestOptions.functions,
           function_call: finalRequestOptions.callFunction
@@ -249,12 +221,12 @@ export class OpenAIChatApi implements CompletionApi {
 
       if (content) {
         return {
-          respond: (message: ChatCompletionRequestMessage, opt) =>
+          content,
+          respond: (message: ChatRequestMessage, opt) =>
             this.chatCompletion(
               [...messages, { role: 'assistant', content }, message],
               opt,
             ),
-          content,
           usage: usage
             ? {
                 totalTokens: usage.total_tokens,
@@ -265,7 +237,9 @@ export class OpenAIChatApi implements CompletionApi {
         };
       } else if (functionCall) {
         return {
-          respond: (message: ChatCompletionRequestMessage, opt) =>
+          name: functionCall.name,
+          arguments: parseUnsafeJson(functionCall.arguments),
+          respond: (message: ChatRequestMessage, opt) =>
             this.chatCompletion(
               [
                 ...messages,
@@ -278,8 +252,6 @@ export class OpenAIChatApi implements CompletionApi {
               ],
               opt,
             ),
-          name: functionCall.name,
-          arguments: parseUnsafeJson(functionCall.arguments),
           usage: usage
             ? {
                 totalTokens: usage.total_tokens,
@@ -322,8 +294,8 @@ export class OpenAIChatApi implements CompletionApi {
   async textCompletion(
     prompt: string,
     requestOptions = {} as Partial<ModelRequestOptions>,
-  ): Promise<Response> {
-    const messages: ChatCompletionRequestMessage[] = compact([
+  ): Promise<ChatResponse> {
+    const messages: ChatRequestMessage[] = compact([
       requestOptions.systemMessage
         ? {
             role: 'system',
