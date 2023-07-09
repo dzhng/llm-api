@@ -1,5 +1,5 @@
 import Anthropic, { AI_PROMPT, HUMAN_PROMPT } from '@anthropic-ai/sdk';
-import { compact, defaults } from 'lodash';
+import { defaults } from 'lodash';
 
 import {
   CompletionDefaultRetries,
@@ -45,7 +45,6 @@ export class AnthropicChatApi implements CompletionApi {
     messages: ChatRequestMessage[],
     requestOptions?: ModelRequestOptions | undefined,
   ): Promise<ChatResponse> {
-    const finalRequestOptions = defaults(requestOptions, RequestDefaults);
     const prompt =
       messages
         .map((message) => {
@@ -64,6 +63,30 @@ export class AnthropicChatApi implements CompletionApi {
         })
         .join('') + AI_PROMPT;
 
+    const res = await this.textCompletion(prompt, requestOptions);
+
+    return {
+      content: res.content,
+      respond: (message: string | ChatRequestMessage, opt) =>
+        this.chatCompletion(
+          [
+            ...messages,
+            { role: 'assistant', content: res.content },
+            typeof message === 'string'
+              ? { role: 'user', content: message }
+              : message,
+          ],
+          opt ?? requestOptions,
+        ),
+    };
+  }
+
+  async textCompletion(
+    initialPrompt: string,
+    requestOptions = {} as Partial<ModelRequestOptions>,
+  ): Promise<ChatResponse> {
+    const finalRequestOptions = defaults(requestOptions, RequestDefaults);
+    const prompt = finalRequestOptions.systemMessage + '\n\n' + initialPrompt;
     debug.log(
       `🔼 completion requested:\n${prompt}\nconfig: ${JSON.stringify(
         this.modelConfig,
@@ -108,30 +131,13 @@ export class AnthropicChatApi implements CompletionApi {
 
     return {
       content,
-      respond: (message: ChatRequestMessage, opt) =>
-        this.chatCompletion(
-          [...messages, { role: 'assistant', content }, message],
-          opt,
+      respond: (message: string | ChatRequestMessage, opt) =>
+        this.textCompletion(
+          `${prompt}${content}${
+            typeof message === 'string' ? message : message.content
+          }`,
+          opt ?? requestOptions,
         ),
     };
-  }
-
-  textCompletion(
-    prompt: string,
-    requestOptions = {} as Partial<ModelRequestOptions>,
-  ): Promise<ChatResponse> {
-    const messages: ChatRequestMessage[] = compact([
-      requestOptions.systemMessage
-        ? {
-            role: 'system',
-            content:
-              typeof requestOptions.systemMessage === 'string'
-                ? requestOptions.systemMessage
-                : requestOptions.systemMessage(),
-          }
-        : undefined,
-      { role: 'user', content: prompt },
-    ]);
-    return this.chatCompletion(messages, requestOptions);
   }
 }

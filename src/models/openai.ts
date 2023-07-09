@@ -1,4 +1,4 @@
-import { compact, defaults } from 'lodash';
+import { defaults } from 'lodash';
 import {
   Configuration,
   CreateChatCompletionRequest,
@@ -93,10 +93,23 @@ export class OpenAIChatApi implements CompletionApi {
 
   // eslint-disable-next-line complexity
   async chatCompletion(
-    messages: ChatRequestMessage[],
+    initialMessages: ChatRequestMessage[],
     requestOptions = {} as Partial<ModelRequestOptions>,
   ): Promise<ChatResponse> {
     const finalRequestOptions = defaults(requestOptions, RequestDefaults);
+    const messages: ChatRequestMessage[] = finalRequestOptions.systemMessage
+      ? [
+          {
+            role: 'system',
+            content:
+              typeof finalRequestOptions.systemMessage === 'string'
+                ? finalRequestOptions.systemMessage
+                : finalRequestOptions.systemMessage(),
+          },
+          ...initialMessages,
+        ]
+      : initialMessages;
+
     debug.log(
       `🔼 completion requested: ${JSON.stringify(
         messages,
@@ -222,10 +235,16 @@ export class OpenAIChatApi implements CompletionApi {
       if (content) {
         return {
           content,
-          respond: (message: ChatRequestMessage, opt) =>
+          respond: (message: string | ChatRequestMessage, opt) =>
             this.chatCompletion(
-              [...messages, { role: 'assistant', content }, message],
-              opt,
+              [
+                ...messages,
+                { role: 'assistant', content },
+                typeof message === 'string'
+                  ? { role: 'user', content: message }
+                  : message,
+              ],
+              opt ?? requestOptions,
             ),
           usage: usage
             ? {
@@ -239,7 +258,7 @@ export class OpenAIChatApi implements CompletionApi {
         return {
           name: functionCall.name,
           arguments: parseUnsafeJson(functionCall.arguments),
-          respond: (message: ChatRequestMessage, opt) =>
+          respond: (message: string | ChatRequestMessage, opt) =>
             this.chatCompletion(
               [
                 ...messages,
@@ -248,9 +267,11 @@ export class OpenAIChatApi implements CompletionApi {
                   content: '', // explicitly put empty string, or api will complain it's required property
                   function_call: functionCall,
                 },
-                message,
+                typeof message === 'string'
+                  ? { role: 'user', content: message }
+                  : message,
               ],
-              opt,
+              opt ?? requestOptions,
             ),
           usage: usage
             ? {
@@ -295,18 +316,7 @@ export class OpenAIChatApi implements CompletionApi {
     prompt: string,
     requestOptions = {} as Partial<ModelRequestOptions>,
   ): Promise<ChatResponse> {
-    const messages: ChatRequestMessage[] = compact([
-      requestOptions.systemMessage
-        ? {
-            role: 'system',
-            content:
-              typeof requestOptions.systemMessage === 'string'
-                ? requestOptions.systemMessage
-                : requestOptions.systemMessage(),
-          }
-        : undefined,
-      { role: 'user', content: prompt },
-    ]);
+    const messages: ChatRequestMessage[] = [{ role: 'user', content: prompt }];
     return this.chatCompletion(messages, requestOptions);
   }
 }
