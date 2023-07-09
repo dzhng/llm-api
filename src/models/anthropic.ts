@@ -122,7 +122,8 @@ export class AnthropicChatApi implements CompletionApi {
           typeof this.modelConfig.stop === 'string'
             ? [this.modelConfig.stop]
             : this.modelConfig.stop,
-        max_tokens_to_sample: finalRequestOptions.minimumResponseTokens,
+        // maximize this for now. TODO: add maximumResponseTokens option
+        max_tokens_to_sample: 1_000_000,
         temperature: this.modelConfig.temperature,
         top_p: this.modelConfig.topP,
         model: this.modelConfig.model ?? DefaultAnthropicModel,
