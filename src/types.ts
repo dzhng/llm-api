@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import EventEmitter from 'events';
 import { ConfigurationParameters as OAIConfig } from 'openai-edge';
+import { JsonValue } from 'type-fest';
 
 export type AnthropicConfig = NonNullable<
   ConstructorParameters<typeof Anthropic>[0]
@@ -82,7 +83,7 @@ export type ChatResponse = {
 
   // name and argument used for function reponse
   name?: string;
-  arguments?: string;
+  arguments?: JsonValue;
 
   usage?: {
     promptTokens: number;

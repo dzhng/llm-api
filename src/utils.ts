@@ -1,6 +1,7 @@
 import { debug as mDebug } from 'debug';
 import jsonic from 'jsonic';
 import { jsonrepair } from 'jsonrepair';
+import { JsonValue } from 'type-fest';
 
 const error = mDebug('llm-api:error');
 const log = mDebug('llm-api:log');
@@ -22,7 +23,7 @@ export function sleep(delay: number) {
   });
 }
 
-export function parseUnsafeJson(json: string): any {
+export function parseUnsafeJson(json: string): JsonValue {
   return jsonic(jsonrepair(json));
 }
 

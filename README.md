@@ -124,7 +124,7 @@ interface ModelResponse {
 
   // used to parse function responses
   name?: string;
-  arguments?: string;
+  arguments?: JsonValue;
 
   usage?: {
     promptTokens: number;
