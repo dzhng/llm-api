@@ -91,8 +91,14 @@ type ModelRequestOptions = {
   // set to automatically add system message (only relevant when using textCompletion)
   systemMessage?: string | (() => string);
 
-  // function to pass into context on OpenAI's new 0613 models
+  // send a prefix to the model response so the model can continue generating from there, useful for steering the model towards certain output structures.
+  // for Anthropic's models ONLY
+  responsePrefix?: string;
+
+  // function related parameters are for OpenAI's models ONLY
   functions?: ModelFunction[];
+  // force the model to call the following function
+  callFunction?: string;
 
   // default: 3
   retries?: number;

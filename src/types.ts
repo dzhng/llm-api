@@ -40,8 +40,12 @@ export type ModelFunction = {
 
 export type ModelRequestOptions = {
   systemMessage?: string | (() => string);
-  functions?: ModelFunction[];
 
+  // send a prefix to the model response so the model can continue generating from there. for Anthropic's models ONLY
+  responsePrefix?: string;
+
+  // function related parameters are for OpenAI's models ONLY
+  functions?: ModelFunction[];
   // force the model to call the following function
   callFunction?: string;
 

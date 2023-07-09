@@ -16,6 +16,7 @@ import { OpenAIChatApi, AnthropicChatApi } from './src';
 
   const res = await client?.textCompletion('Hello', {
     systemMessage: 'You will respond to all human messages in JSON',
+    responsePrefix: '{ "message": "',
   });
   console.info('Response 1: ', res);
 

@@ -42,9 +42,23 @@ export class AnthropicChatApi implements CompletionApi {
   // chat based prompting following these instructions:
   // https://docs.anthropic.com/claude/reference/getting-started-with-the-api
   async chatCompletion(
-    messages: ChatRequestMessage[],
+    initialMessages: ChatRequestMessage[],
     requestOptions?: ModelRequestOptions | undefined,
   ): Promise<ChatResponse> {
+    const finalRequestOptions = defaults(requestOptions, RequestDefaults);
+    const messages: ChatRequestMessage[] = finalRequestOptions.systemMessage
+      ? [
+          {
+            role: 'system',
+            content:
+              typeof finalRequestOptions.systemMessage === 'string'
+                ? finalRequestOptions.systemMessage
+                : finalRequestOptions.systemMessage(),
+          },
+          ...initialMessages,
+        ]
+      : initialMessages;
+
     const prompt =
       messages
         .map((message) => {
@@ -61,32 +75,12 @@ export class AnthropicChatApi implements CompletionApi {
               );
           }
         })
-        .join('') + AI_PROMPT;
+        .join('') +
+      AI_PROMPT +
+      (finalRequestOptions.responsePrefix
+        ? ` ${finalRequestOptions.responsePrefix}`
+        : '');
 
-    const res = await this.textCompletion(prompt, requestOptions);
-
-    return {
-      content: res.content,
-      respond: (message: string | ChatRequestMessage, opt) =>
-        this.chatCompletion(
-          [
-            ...messages,
-            { role: 'assistant', content: res.content },
-            typeof message === 'string'
-              ? { role: 'user', content: message }
-              : message,
-          ],
-          opt ?? requestOptions,
-        ),
-    };
-  }
-
-  async textCompletion(
-    initialPrompt: string,
-    requestOptions = {} as Partial<ModelRequestOptions>,
-  ): Promise<ChatResponse> {
-    const finalRequestOptions = defaults(requestOptions, RequestDefaults);
-    const prompt = finalRequestOptions.systemMessage + '\n\n' + initialPrompt;
     debug.log(
       `🔼 completion requested:\n${prompt}\nconfig: ${JSON.stringify(
         this.modelConfig,
@@ -132,12 +126,24 @@ export class AnthropicChatApi implements CompletionApi {
     return {
       content,
       respond: (message: string | ChatRequestMessage, opt) =>
-        this.textCompletion(
-          `${prompt}${content}${
-            typeof message === 'string' ? message : message.content
-          }`,
-          opt ?? requestOptions,
+        this.chatCompletion(
+          [
+            ...messages,
+            { role: 'assistant', content },
+            typeof message === 'string'
+              ? { role: 'user', content: message }
+              : message,
+          ],
+          opt,
         ),
     };
+  }
+
+  textCompletion(
+    prompt: string,
+    requestOptions = {} as Partial<ModelRequestOptions>,
+  ): Promise<ChatResponse> {
+    const messages: ChatRequestMessage[] = [{ role: 'user', content: prompt }];
+    return this.chatCompletion(messages, requestOptions);
   }
 }
