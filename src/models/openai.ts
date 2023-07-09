@@ -201,7 +201,7 @@ export class OpenAIChatApi implements CompletionApi {
                 continue;
               }
 
-              const parsed = parseUnsafeJson(cleaned);
+              const parsed = parseUnsafeJson(cleaned) as any;
               const text = parsed.choices[0].delta.content ?? '';
 
               debug.write(text);
