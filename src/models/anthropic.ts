@@ -21,6 +21,8 @@ import { TokenError } from './errors';
 import { CompletionApi } from './interface';
 import { getTikTokenTokensFromPrompt } from './tokenizer';
 
+const ForbiddenTokens = [HUMAN_PROMPT.trim(), AI_PROMPT.trim()];
+
 const RequestDefaults = {
   retries: CompletionDefaultRetries,
   retryInterval: RateLimitRetryIntervalMs,
@@ -46,18 +48,32 @@ export class AnthropicChatApi implements CompletionApi {
     requestOptions?: ModelRequestOptions | undefined,
   ): Promise<ChatResponse> {
     const finalRequestOptions = defaults(requestOptions, RequestDefaults);
-    const messages: ChatRequestMessage[] = finalRequestOptions.systemMessage
-      ? [
-          {
-            role: 'system',
-            content:
-              typeof finalRequestOptions.systemMessage === 'string'
-                ? finalRequestOptions.systemMessage
-                : finalRequestOptions.systemMessage(),
-          },
-          ...initialMessages,
-        ]
-      : initialMessages;
+    const messages: ChatRequestMessage[] = (
+      finalRequestOptions.systemMessage
+        ? [
+            {
+              role: 'system',
+              content:
+                typeof finalRequestOptions.systemMessage === 'string'
+                  ? finalRequestOptions.systemMessage
+                  : finalRequestOptions.systemMessage(),
+            },
+            ...initialMessages,
+          ]
+        : initialMessages
+    ).map(
+      (message) =>
+        ({
+          ...message,
+          // automatically remove forbidden tokens in the input message to thwart prompt injection attacks
+          content:
+            message.content &&
+            ForbiddenTokens.reduce(
+              (prev, token) => prev.replaceAll(token, ''),
+              message.content,
+            ),
+        } as ChatRequestMessage),
+    );
 
     const prompt =
       messages
@@ -79,7 +95,7 @@ export class AnthropicChatApi implements CompletionApi {
       AI_PROMPT +
       (finalRequestOptions.responsePrefix
         ? ` ${finalRequestOptions.responsePrefix}`
-        : '');
+        : ' ');
 
     debug.log(
       `🔼 completion requested:\n${prompt}\nconfig: ${JSON.stringify(
