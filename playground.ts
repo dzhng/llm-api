@@ -1,17 +1,25 @@
-import { OpenAIChatApi } from './src';
+import { OpenAIChatApi, AnthropicChatApi } from './src';
 
 (async function go() {
-  const openai = new OpenAIChatApi(
-    {
-      apiKey: process.env.OPENAI_KEY ?? 'YOUR_OPENAI_KEY',
-    },
-    { contextSize: 4096, model: 'gpt-3.5-turbo-0613' },
-  );
+  const client = process.env.OPENAI_KEY
+    ? new OpenAIChatApi(
+        {
+          apiKey: process.env.OPENAI_KEY ?? 'YOUR_client_KEY',
+        },
+        { contextSize: 4096, model: 'gpt-3.5-turbo-0613' },
+      )
+    : process.env.ANTHROPIC_KEY
+    ? new AnthropicChatApi({
+        apiKey: process.env.ANTHROPIC_KEY ?? 'YOUR_client_KEY',
+      })
+    : undefined;
 
-  const res = await openai.textCompletion('Hello');
+  const res = await client?.textCompletion('Hello', {
+    systemMessage: 'You will respond to all human messages in JSON',
+  });
   console.info('Response 1: ', res);
 
-  const res2 = await openai.chatCompletion([
+  const res2 = await client?.chatCompletion([
     { role: 'user', content: 'hello' },
     {
       role: 'assistant',
@@ -24,6 +32,6 @@ import { OpenAIChatApi } from './src';
   ]);
   console.info('Response 2: ', res2);
 
-  const res3 = await res2.respond({ role: 'user', content: 'testing 123' });
+  const res3 = await res2?.respond({ role: 'user', content: 'testing 123' });
   console.info('Response 3: ', res3);
 })();
