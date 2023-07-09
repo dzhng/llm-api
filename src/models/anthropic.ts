@@ -134,8 +134,10 @@ export class AnthropicChatApi implements CompletionApi {
       },
     );
 
-    const content =
-      (finalRequestOptions.responsePrefix ?? '') + response.completion;
+    const content = finalRequestOptions.responsePrefix
+      ? finalRequestOptions.responsePrefix + response.completion
+      : // if no prefix, process the completion a bit by trimming since claude tends to output an extra white space at the beginning
+        response.completion.trim();
     if (!content) {
       throw new Error('Completion response malformed');
     }
