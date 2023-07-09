@@ -5,6 +5,7 @@ import {
   CompletionDefaultRetries,
   CompletionDefaultTimeout,
   DefaultAnthropicModel,
+  MaximumResponseTokens,
   MinimumResponseTokens,
   RateLimitRetryIntervalMs,
 } from '../config';
@@ -28,6 +29,7 @@ const RequestDefaults = {
   retryInterval: RateLimitRetryIntervalMs,
   timeout: CompletionDefaultTimeout,
   minimumResponseTokens: MinimumResponseTokens,
+  maximumResponseTokens: MaximumResponseTokens,
 };
 
 export class AnthropicChatApi implements CompletionApi {
@@ -106,7 +108,7 @@ export class AnthropicChatApi implements CompletionApi {
     // check if we'll have enough tokens to meet the minimum response
     const maxPromptTokens = this.modelConfig.contextSize
       ? this.modelConfig.contextSize - finalRequestOptions.minimumResponseTokens
-      : 1_000_000;
+      : 100_000;
 
     const messageTokens = this.getTokensFromPrompt([prompt]);
     if (messageTokens > maxPromptTokens) {
@@ -122,11 +124,10 @@ export class AnthropicChatApi implements CompletionApi {
           typeof this.modelConfig.stop === 'string'
             ? [this.modelConfig.stop]
             : this.modelConfig.stop,
-        // maximize this for now. TODO: add maximumResponseTokens option
-        max_tokens_to_sample: 1_000_000,
         temperature: this.modelConfig.temperature,
         top_p: this.modelConfig.topP,
         model: this.modelConfig.model ?? DefaultAnthropicModel,
+        max_tokens_to_sample: finalRequestOptions.maximumResponseTokens,
         prompt,
       },
       {

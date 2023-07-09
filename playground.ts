@@ -14,11 +14,16 @@ import { OpenAIChatApi, AnthropicChatApi } from './src';
       })
     : undefined;
 
-  const res = await client?.textCompletion('Hello', {
+  const res0 = await client?.textCompletion('Hello', {
     systemMessage: 'You will respond to all human messages in JSON',
     responsePrefix: '{ "message": "',
   });
-  console.info('Response 1: ', res);
+  console.info('Response 0: ', res0);
+
+  const res1 = await client?.textCompletion('Hello', {
+    maximumResponseTokens: 1,
+  });
+  console.info('Response 1: ', res1);
 
   const res2 = await client?.chatCompletion([
     { role: 'user', content: 'hello' },

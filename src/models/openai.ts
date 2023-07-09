@@ -30,6 +30,8 @@ const RequestDefaults = {
   retryInterval: RateLimitRetryIntervalMs,
   timeout: CompletionDefaultTimeout,
   minimumResponseTokens: MinimumResponseTokens,
+  // NOTE: this is left without defaults by design - OpenAI's API will throw an error if max_token values is greater than model context size, which means it needs to be different for every model and cannot be set as a default. This fine since OpenAI won't put any limit on max_tokens if it's not set anyways (unlike Anthropic).
+  // maximumResponseTokens: MaximumResponseTokens,
 };
 const AzureQueryParams = { 'api-version': '2023-03-15-preview' };
 
@@ -123,7 +125,7 @@ export class OpenAIChatApi implements CompletionApi {
       const maxPromptTokens = this.modelConfig.contextSize
         ? this.modelConfig.contextSize -
           finalRequestOptions.minimumResponseTokens
-        : 1_000_000;
+        : 100_000;
 
       const messageTokens = this.getTokensFromPrompt(
         messages.map((m) => m.content ?? ''),
@@ -141,10 +143,31 @@ export class OpenAIChatApi implements CompletionApi {
         () => controller.abort(),
         finalRequestOptions.timeout,
       );
+
+      // calculate max response tokens
+      // note that for OpenAI models, it MUST be conditional on the contextSize being set, this is because OpenAI's API throws an error if maxTokens is above context size
+      const maxTokens =
+        this.modelConfig.contextSize &&
+        finalRequestOptions.maximumResponseTokens
+          ? Math.min(
+              this.modelConfig.contextSize - maxPromptTokens,
+              finalRequestOptions.maximumResponseTokens,
+            )
+          : undefined;
+      if (
+        finalRequestOptions.maximumResponseTokens &&
+        !this.modelConfig.contextSize
+      ) {
+        console.warn(
+          'maximumResponseTokens option ignored, please set contextSize in ModelConfig so the parameter can be calculated safely',
+        );
+      }
+
       const completion = await this._client.createChatCompletion(
         {
           model: DefaultOpenAIModel,
           ...convertConfig(this.modelConfig),
+          max_tokens: maxTokens,
           functions: finalRequestOptions.functions,
           function_call: finalRequestOptions.callFunction
             ? { name: finalRequestOptions.callFunction }

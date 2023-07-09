@@ -60,6 +60,10 @@ export type ModelRequestOptions = {
   // the minimum amount of tokens to allocate for the response. if the request is predicted to not have enough tokens, it will automatically throw a 'TokenError' without sending the request
   minimumResponseTokens?: number;
 
+  // the maximum amount of tokens to use for response
+  // NOTE: in OpenAI models, setting this option also requires contextSize in ModelConfig to be set
+  maximumResponseTokens?: number;
+
   // pass in an event emitter to receive message stream events
   events?: EventEmitter;
 };
