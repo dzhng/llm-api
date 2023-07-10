@@ -118,28 +118,51 @@ export class AnthropicChatApi implements CompletionApi {
       );
     }
 
-    const response = await this._client.completions.create(
-      {
-        stop_sequences:
-          typeof this.modelConfig.stop === 'string'
-            ? [this.modelConfig.stop]
-            : this.modelConfig.stop,
-        temperature: this.modelConfig.temperature,
-        top_p: this.modelConfig.topP,
-        model: this.modelConfig.model ?? DefaultAnthropicModel,
-        max_tokens_to_sample: finalRequestOptions.maximumResponseTokens,
-        prompt,
-      },
-      {
-        timeout: finalRequestOptions.timeout,
-        maxRetries: finalRequestOptions.retries,
-      },
-    );
+    let completion = '';
+    const completionBody = {
+      stop_sequences:
+        typeof this.modelConfig.stop === 'string'
+          ? [this.modelConfig.stop]
+          : this.modelConfig.stop,
+      temperature: this.modelConfig.temperature,
+      top_p: this.modelConfig.topP,
+      model: this.modelConfig.model ?? DefaultAnthropicModel,
+      max_tokens_to_sample: finalRequestOptions.maximumResponseTokens,
+      prompt,
+    };
+    const completionOptions = {
+      timeout: finalRequestOptions.timeout,
+      maxRetries: finalRequestOptions.retries,
+    };
+
+    if (this.modelConfig.stream) {
+      const stream = await this._client.completions.create(
+        {
+          ...completionBody,
+          stream: true,
+        },
+        completionOptions,
+      );
+      for await (const part of stream) {
+        const text = part.completion;
+        debug.write(text);
+        completion += text;
+        finalRequestOptions?.events?.emit('data', text);
+      }
+      debug.write('\n[STREAM] response end\n');
+    } else {
+      const response = await this._client.completions.create(
+        completionBody,
+        completionOptions,
+      );
+      completion = response.completion;
+      debug.log('🔽 completion received', completion);
+    }
 
     const content = finalRequestOptions.responsePrefix
-      ? finalRequestOptions.responsePrefix + response.completion
+      ? finalRequestOptions.responsePrefix + completion
       : // if no prefix, process the completion a bit by trimming since claude tends to output an extra white space at the beginning
-        response.completion.trim();
+        completion.trim();
     if (!content) {
       throw new Error('Completion response malformed');
     }

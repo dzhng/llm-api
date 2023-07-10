@@ -9,9 +9,12 @@ import { OpenAIChatApi, AnthropicChatApi } from './src';
         { contextSize: 4096, model: 'gpt-3.5-turbo-0613' },
       )
     : process.env.ANTHROPIC_KEY
-    ? new AnthropicChatApi({
-        apiKey: process.env.ANTHROPIC_KEY ?? 'YOUR_client_KEY',
-      })
+    ? new AnthropicChatApi(
+        {
+          apiKey: process.env.ANTHROPIC_KEY ?? 'YOUR_client_KEY',
+        },
+        { stream: true, model: 'claude-1-100k' },
+      )
     : undefined;
 
   const res0 = await client?.textCompletion('Hello', {
