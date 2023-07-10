@@ -67,6 +67,9 @@ interface ModelConfig {
   frequencyPenalty?: number;
   logitBias?: Record<string, number>;
   user?: string;
+
+  // use stream mode for API response, the streamed tokens will be sent to `events in `ModelRequestOptions`
+  stream?: boolean;
 }
 ```
 

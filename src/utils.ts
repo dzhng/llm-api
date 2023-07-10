@@ -13,7 +13,7 @@ export const debug = {
   log,
   write: (t: string) =>
     process.env.DEBUG &&
-    'llm-api:log'.match(process.env.DEBUG) &&
+    (process.env.DEBUG === '*' || 'llm-api:log'.match(process.env.DEBUG)) &&
     process.stdout.write(t),
 };
 

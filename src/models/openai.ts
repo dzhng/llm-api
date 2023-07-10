@@ -203,7 +203,7 @@ export class OpenAIChatApi implements CompletionApi {
         }
       }
 
-      let content: string | undefined;
+      let content = '';
       let functionCall: { name: string; arguments: string } | undefined;
       let usage: any;
       if (this.modelConfig.stream) {
@@ -212,12 +212,38 @@ export class OpenAIChatApi implements CompletionApi {
           throw new Error('Reader undefined');
         }
 
+        const functionCallStreamParts: Partial<
+          NonNullable<typeof functionCall>
+        >[] = [];
         const decoder = new TextDecoder('utf-8');
+        let lineBuffer = '';
         while (true) {
           const { done, value } = await reader.read();
-          const stringfied = decoder.decode(value).split('\n');
 
-          for (const line of stringfied) {
+          if (done) {
+            // finalize function call data from all parts from stream
+            if (functionCallStreamParts.length > 0) {
+              functionCall = functionCallStreamParts.reduce(
+                (prev, part) => ({
+                  name: (prev.name ?? '') + (part.name ?? ''),
+                  arguments: (prev.arguments ?? '') + (part.arguments ?? ''),
+                }),
+                {},
+              ) as { name: string; arguments: string };
+            }
+            break;
+          }
+
+          // make sure lineBuffer ends on a valid character before continuing (e.g. not in the middle of a packet)
+          lineBuffer += decoder.decode(value);
+          if (!lineBuffer.endsWith('\n')) {
+            continue;
+          }
+
+          const stringified = lineBuffer.split('\n');
+          lineBuffer = '';
+
+          for (const line of stringified) {
             try {
               const cleaned = line.replace('data:', '').trim();
               if (cleaned.length === 0 || cleaned === '[DONE]') {
@@ -225,20 +251,30 @@ export class OpenAIChatApi implements CompletionApi {
               }
 
               const parsed = parseUnsafeJson(cleaned) as any;
-              const text = parsed.choices[0].delta.content ?? '';
+              const text = parsed.choices[0].delta.content;
+              const part = parsed.choices[0].delta.function_call as Partial<
+                typeof functionCall
+              >;
 
-              debug.write(text);
-              finalRequestOptions?.events?.emit('data', text);
-              content += text;
+              const emitMessage: string = part
+                ? part.name
+                  ? `${part.name}: ${part.arguments}`
+                  : part.arguments ?? ''
+                : text ?? '';
+              debug.write(emitMessage);
+              finalRequestOptions?.events?.emit('data', emitMessage);
+
+              if (text) {
+                content += text;
+              } else if (part) {
+                functionCallStreamParts.push(part);
+              }
             } catch (e) {
               debug.error('Error parsing content', e);
             }
           }
-
-          if (done) {
-            break;
-          }
         }
+
         debug.write('\n[STREAM] response end\n');
       } else {
         const body = await completion.json();
