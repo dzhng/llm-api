@@ -23,6 +23,9 @@ import { OpenAIChatApi, AnthropicChatApi } from './src';
   });
   console.info('Response 0: ', res0);
 
+  const resEm = await client?.textCompletion('✨');
+  console.info('Response em: ', resEm);
+
   const res1 = await client?.textCompletion('Hello', {
     maximumResponseTokens: 1,
   });
