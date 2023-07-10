@@ -181,6 +181,9 @@ const openai = new OpenAIChatApi({
   apiKey: 'AZURE_OPENAI_KEY',
   azureDeployment: 'AZURE_DEPLOYMENT_NAME',
   azureEndpoint: 'AZURE_ENDPOINT',
+
+  // optional, defaults to 2023-06-01-preview
+  azureApiVersion: 'YYYY-MM-DD',
 });
 ```
 

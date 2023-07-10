@@ -8,6 +8,7 @@ import {
 import {
   CompletionDefaultRetries,
   CompletionDefaultTimeout,
+  DefaultAzureVersion,
   DefaultOpenAIModel,
   MinimumResponseTokens,
   RateLimitRetryIntervalMs,
@@ -33,7 +34,6 @@ const RequestDefaults = {
   // NOTE: this is left without defaults by design - OpenAI's API will throw an error if max_token values is greater than model context size, which means it needs to be different for every model and cannot be set as a default. This fine since OpenAI won't put any limit on max_tokens if it's not set anyways (unlike Anthropic).
   // maximumResponseTokens: MaximumResponseTokens,
 };
-const AzureQueryParams = { 'api-version': '2023-03-15-preview' };
 
 const convertConfig = (
   config: Partial<ModelConfig>,
@@ -72,12 +72,15 @@ export class OpenAIChatApi implements CompletionApi {
       ? { 'api-key': String(config.apiKey) }
       : undefined;
 
+    const azureQueryParams = {
+      'api-version': config.azureApiVersion ?? DefaultAzureVersion,
+    };
     const azureFetch: typeof globalThis.fetch = (input, init) => {
       const customInput =
         typeof input === 'string'
-          ? `${input}?${new URLSearchParams(AzureQueryParams)}`
+          ? `${input}?${new URLSearchParams(azureQueryParams)}`
           : input instanceof URL
-          ? `${input.toString()}?${new URLSearchParams(AzureQueryParams)}`
+          ? `${input.toString()}?${new URLSearchParams(azureQueryParams)}`
           : input;
       return fetch(customInput, init);
     };

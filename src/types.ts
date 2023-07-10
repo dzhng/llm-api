@@ -10,6 +10,7 @@ export type AnthropicConfig = NonNullable<
 export type OpenAIConfig = OAIConfig & {
   azureEndpoint?: string;
   azureDeployment?: string;
+  azureApiVersion?: string;
 };
 
 export interface ModelConfig {
