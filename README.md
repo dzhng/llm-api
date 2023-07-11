@@ -16,6 +16,7 @@ Fully typed chat APIs for OpenAI, Anthropic, and Azure's chat models for browser
 - Catch token overflow errors automatically on the client side
 - Handle rate limit and any other API errors as gracefully as possible (e.g. exponential backoff for rate-limit)
 - Support for browser, edge, and node environments
+- Works great with [zod-gpt](https://github.com/dzhng/zod-gpt) for outputting structured data
 
 ```typescript
 import { OpenAIChatApi } from 'llm-api';
