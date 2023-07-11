@@ -6,5 +6,5 @@ export const MinimumResponseTokens = 200;
 export const MaximumResponseTokens = 8_000;
 
 export const DefaultOpenAIModel = 'gpt-3.5-turbo';
-export const DefaultAnthropicModel = 'claude-instant-1-100k';
+export const DefaultAnthropicModel = 'claude-instant-1';
 export const DefaultAzureVersion = '2023-06-01-preview';
