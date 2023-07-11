@@ -190,7 +190,7 @@ const openai = new OpenAIChatApi({
 
 ## 🔶 Anthropic
 
-Anthropic's models have the unique advantage of a large 100k context window and extremely fast performance. If no explicit model is specified, `llm-api` will default to the `claude-instant-1-100k` model.
+Anthropic's models have the unique advantage of a large 100k context window and extremely fast performance. If no explicit model is specified, `llm-api` will default to the `claude-instant-1` model.
 
 ```typescript
 const anthropic = new AnthropicChatApi(params: AnthropicConfig, config: ModelConfig);
