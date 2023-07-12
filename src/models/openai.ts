@@ -102,6 +102,10 @@ export class OpenAIChatApi implements CompletionApi {
     requestOptions = {} as Partial<ModelRequestOptions>,
   ): Promise<ChatResponse> {
     const finalRequestOptions = defaults(requestOptions, RequestDefaults);
+    if (finalRequestOptions.responsePrefix) {
+      console.warn('OpenAI models currently does not support responsePrefix');
+    }
+
     const messages: ChatRequestMessage[] = finalRequestOptions.systemMessage
       ? [
           {

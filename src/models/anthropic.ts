@@ -153,12 +153,22 @@ export class AnthropicChatApi implements CompletionApi {
           },
         },
       );
+
+      // emit prefix since technically that's counted as part of the response
+      if (finalRequestOptions?.responsePrefix) {
+        finalRequestOptions?.events?.emit(
+          'data',
+          finalRequestOptions.responsePrefix,
+        );
+      }
+
       for await (const part of stream) {
         const text = part.completion;
         debug.write(text);
         completion += text;
         finalRequestOptions?.events?.emit('data', text);
       }
+
       debug.write('\n[STREAM] response end\n');
     } else {
       const response = await this._client.completions.create(completionBody, {
