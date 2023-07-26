@@ -141,17 +141,7 @@ export class AnthropicChatApi implements CompletionApi {
           ...completionBody,
           stream: true,
         },
-        {
-          ...completionOptions,
-          // HACK: issue with content-length in edge env
-          // https://github.com/anthropics/anthropic-sdk-typescript/issues/41
-          headers: {
-            'Content-Length': Buffer.byteLength(
-              JSON.stringify({ ...completionBody, stream: true }, null, 2),
-              'utf-8',
-            ).toString(),
-          },
-        },
+        completionOptions,
       );
 
       // emit prefix since technically that's counted as part of the response
@@ -171,17 +161,10 @@ export class AnthropicChatApi implements CompletionApi {
 
       debug.write('\n[STREAM] response end\n');
     } else {
-      const response = await this._client.completions.create(completionBody, {
-        ...completionOptions,
-        // HACK: issue with content-length in edge env
-        // https://github.com/anthropics/anthropic-sdk-typescript/issues/41
-        headers: {
-          'Content-Length': Buffer.byteLength(
-            JSON.stringify(completionBody, null, 2),
-            'utf-8',
-          ).toString(),
-        },
-      });
+      const response = await this._client.completions.create(
+        completionBody,
+        completionOptions,
+      );
       completion = response.completion;
       debug.log('🔽 completion received', completion);
     }
