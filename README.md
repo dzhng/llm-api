@@ -196,6 +196,17 @@ Anthropic's models have the unique advantage of a large 100k context window and 
 const anthropic = new AnthropicChatApi(params: AnthropicConfig, config: ModelConfig);
 ```
 
+## ❖ Anthropic Amazon Bedrock
+
+```typescript
+const conf = {
+  accessKeyId: 'AWS_ACCESS_KEY',
+  secretAccessKey: 'AWS_SECRET_KEY',
+};
+
+const anthropicBedrock = new AnthropicBedrockChat(conf);
+```
+
 ## 🤓 Debugging
 
 `llm-api` usese the `debug` module for logging & error messages. To run in debug mode, set the `DEBUG` env variable:
