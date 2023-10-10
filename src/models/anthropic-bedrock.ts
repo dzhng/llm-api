@@ -1,6 +1,6 @@
 import { AI_PROMPT, HUMAN_PROMPT } from '@anthropic-ai/sdk';
 import {
-  BedrockRuntimeClient,
+  BedrockRuntime,
   BedrockRuntimeClientConfig,
   InvokeModelCommand,
   InvokeModelCommandInput,
@@ -20,6 +20,7 @@ import {
   ModelConfig,
   ModelRequestOptions,
 } from '../types';
+import { debug } from '../utils';
 
 import { TokenError } from './errors';
 import { CompletionApi } from './interface';
@@ -37,7 +38,7 @@ const RequestDefaults = {
 
 export class AnthropicBedrockChat implements CompletionApi {
   modelConfig: ModelConfig;
-  _client: BedrockRuntimeClient;
+  _client: BedrockRuntime;
 
   constructor(
     config: BedrockRuntimeClientConfig['credentials'],
@@ -45,7 +46,7 @@ export class AnthropicBedrockChat implements CompletionApi {
   ) {
     this.modelConfig = modelConfig ?? {};
 
-    this._client = new BedrockRuntimeClient({
+    this._client = new BedrockRuntime({
       region: 'us-east-1',
       serviceId: 'bedrock-runtime',
       credentials: config,
@@ -135,16 +136,55 @@ export class AnthropicBedrockChat implements CompletionApi {
       }),
     };
 
-    const completionOptions = {
-      requestTimeout: finalRequestOptions.timeout,
-      //abortSignal
-    };
+    let completion = '';
 
-    const command = new InvokeModelCommand(params);
-    const response = await this._client.send(command, completionOptions);
-    const content = new TextDecoder().decode(response.body);
+    if (this.modelConfig.stream) {
+      try {
+        const result = await this._client.invokeModelWithResponseStream(params);
 
-    // TODO add logic for streaming response
+        const events = result.body;
+
+        for await (const event of events || []) {
+          // Check the top-level field to determine which event this is.
+          if (event.chunk) {
+            const text = new TextDecoder().decode(event.chunk.bytes);
+            debug.write(text);
+            completion += text;
+            finalRequestOptions?.events?.emit('data', text);
+          } else {
+            throw new Error(
+              'Stream error',
+              event.internalServerException ||
+                event.modelStreamErrorException ||
+                event.modelTimeoutException ||
+                event.throttlingException ||
+                event.validationException,
+            );
+          }
+        }
+        debug.write('\n[STREAM] response end\n');
+      } catch (err) {
+        // handle error
+        console.error(err);
+      }
+    } else {
+      const completionOptions = {
+        requestTimeout: finalRequestOptions.timeout,
+      };
+
+      const command = new InvokeModelCommand(params);
+      const response = await this._client.send(command, completionOptions);
+      completion = new TextDecoder().decode(response.body);
+      debug.log('🔽 completion received', completion);
+    }
+
+    const content = finalRequestOptions.responsePrefix
+      ? finalRequestOptions.responsePrefix + completion
+      : // if no prefix, process the completion a bit by trimming since claude tends to output an extra white space at the beginning
+        completion.trim();
+    if (!content) {
+      throw new Error('Completion response malformed');
+    }
 
     return {
       content,
