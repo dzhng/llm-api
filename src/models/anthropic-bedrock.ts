@@ -50,6 +50,7 @@ export class AnthropicBedrockChat implements CompletionApi {
       region: 'us-east-1',
       serviceId: 'bedrock-runtime',
       credentials: config,
+      maxAttempts: RequestDefaults.retries,
     });
   }
 
@@ -137,10 +138,16 @@ export class AnthropicBedrockChat implements CompletionApi {
     };
 
     let completion = '';
+    const options = {
+      requestTimeout: finalRequestOptions.timeout,
+    };
 
     if (this.modelConfig.stream) {
       try {
-        const result = await this._client.invokeModelWithResponseStream(params);
+        const result = await this._client.invokeModelWithResponseStream(
+          params,
+          options,
+        );
 
         const events = result.body;
 
@@ -168,12 +175,8 @@ export class AnthropicBedrockChat implements CompletionApi {
         console.error(err);
       }
     } else {
-      const completionOptions = {
-        requestTimeout: finalRequestOptions.timeout,
-      };
-
       const command = new InvokeModelCommand(params);
-      const response = await this._client.send(command, completionOptions);
+      const response = await this._client.send(command, options);
       completion = new TextDecoder().decode(response.body);
       debug.log('🔽 completion received', completion);
     }
