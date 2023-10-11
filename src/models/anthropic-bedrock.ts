@@ -59,54 +59,11 @@ export class AnthropicBedrockChat implements CompletionApi {
     requestOptions?: ModelRequestOptions | undefined,
   ): Promise<ChatResponse> {
     const finalRequestOptions = defaults(requestOptions, RequestDefaults);
-    const messages: ChatRequestMessage[] = (
-      finalRequestOptions.systemMessage
-        ? [
-            {
-              role: 'system',
-              content:
-                typeof finalRequestOptions.systemMessage === 'string'
-                  ? finalRequestOptions.systemMessage
-                  : finalRequestOptions.systemMessage(),
-            },
-            ...initialMessages,
-          ]
-        : initialMessages
-    ).map(
-      (message) =>
-        ({
-          ...message,
-          // automatically remove forbidden tokens in the input message to thwart prompt injection attacks
-          content:
-            message.content &&
-            ForbiddenTokens.reduce(
-              (prev, token) => prev.replaceAll(token, ''),
-              message.content,
-            ),
-        } as ChatRequestMessage),
+    const messages: ChatRequestMessage[] = buildMessages(
+      finalRequestOptions,
+      initialMessages,
     );
-
-    const prompt =
-      messages
-        .map((message) => {
-          switch (message.role) {
-            case 'user':
-              return `${HUMAN_PROMPT} ${message.content}`;
-            case 'assistant':
-              return `${AI_PROMPT} ${message.content}`;
-            case 'system':
-              return `${HUMAN_PROMPT} ${message.content}`;
-            default:
-              throw new Error(
-                `Anthropic models do not support message with the role ${message.role}`,
-              );
-          }
-        })
-        .join('') +
-      AI_PROMPT +
-      (finalRequestOptions.responsePrefix
-        ? ` ${finalRequestOptions.responsePrefix}`
-        : '');
+    const prompt = buildPrompt(messages, finalRequestOptions);
 
     const maxPromptTokens = this.modelConfig.contextSize
       ? this.modelConfig.contextSize - finalRequestOptions.minimumResponseTokens
@@ -148,6 +105,14 @@ export class AnthropicBedrockChat implements CompletionApi {
           params,
           options,
         );
+
+        // emit prefix since technically that's counted as part of the response
+        if (finalRequestOptions?.responsePrefix) {
+          finalRequestOptions?.events?.emit(
+            'data',
+            finalRequestOptions.responsePrefix,
+          );
+        }
 
         const events = result.body;
 
@@ -213,4 +178,66 @@ export class AnthropicBedrockChat implements CompletionApi {
   }
 
   getTokensFromPrompt = getTikTokenTokensFromPrompt;
+}
+
+function buildMessages(
+  finalRequestOptions: typeof RequestDefaults & ModelRequestOptions,
+  initialMessages: ChatRequestMessage[],
+) {
+  const messages: ChatRequestMessage[] = (
+    finalRequestOptions.systemMessage
+      ? [
+          {
+            role: 'system',
+            content:
+              typeof finalRequestOptions.systemMessage === 'string'
+                ? finalRequestOptions.systemMessage
+                : finalRequestOptions.systemMessage(),
+          },
+          ...initialMessages,
+        ]
+      : initialMessages
+  ).map(
+    (message) =>
+      ({
+        ...message,
+        // automatically remove forbidden tokens in the input message to thwart prompt injection attacks
+        content:
+          message.content &&
+          ForbiddenTokens.reduce(
+            (prev, token) => prev.replaceAll(token, ''),
+            message.content,
+          ),
+      } as ChatRequestMessage),
+  );
+
+  return messages;
+}
+
+function buildPrompt(
+  messages: ChatRequestMessage[],
+  finalRequestOptions: typeof RequestDefaults & ModelRequestOptions,
+) {
+  return (
+    messages
+      .map((message) => {
+        switch (message.role) {
+          case 'user':
+            return `${HUMAN_PROMPT} ${message.content}`;
+          case 'assistant':
+            return `${AI_PROMPT} ${message.content}`;
+          case 'system':
+            return `${HUMAN_PROMPT} ${message.content}`;
+          default:
+            throw new Error(
+              `Anthropic models do not support message with the role ${message.role}`,
+            );
+        }
+      })
+      .join('') +
+    AI_PROMPT +
+    (finalRequestOptions.responsePrefix
+      ? ` ${finalRequestOptions.responsePrefix}`
+      : '')
+  );
 }
