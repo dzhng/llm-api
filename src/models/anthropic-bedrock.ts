@@ -36,7 +36,7 @@ const RequestDefaults = {
   maximumResponseTokens: MaximumResponseTokens,
 };
 
-export class AnthropicBedrockChat implements CompletionApi {
+export class AnthropicBedrockChatApi implements CompletionApi {
   modelConfig: ModelConfig;
   _client: BedrockRuntime;
 
