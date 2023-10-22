@@ -1,21 +1,39 @@
-import { OpenAIChatApi, AnthropicChatApi } from './src';
+import {
+  AnthropicBedrockChatApi,
+  AnthropicChatApi,
+  OpenAIChatApi,
+} from './src';
 
 (async function go() {
-  const client = process.env.OPENAI_KEY
-    ? new OpenAIChatApi(
-        {
-          apiKey: process.env.OPENAI_KEY ?? 'YOUR_client_KEY',
-        },
-        { contextSize: 4096, model: 'gpt-3.5-turbo-0613' },
-      )
-    : process.env.ANTHROPIC_KEY
-    ? new AnthropicChatApi(
-        {
-          apiKey: process.env.ANTHROPIC_KEY ?? 'YOUR_client_KEY',
-        },
-        { stream: true, model: 'claude-1-100k' },
-      )
-    : undefined;
+  let client:
+    | OpenAIChatApi
+    | AnthropicChatApi
+    | AnthropicBedrockChatApi
+    | undefined;
+
+  if (process.env.OPENAI_KEY) {
+    client = new OpenAIChatApi(
+      {
+        apiKey: process.env.OPENAI_KEY ?? 'YOUR_client_KEY',
+      },
+      { contextSize: 4096, model: 'gpt-3.5-turbo-0613' },
+    );
+  } else if (process.env.ANTHROPIC_KEY) {
+    client = new AnthropicChatApi(
+      {
+        apiKey: process.env.ANTHROPIC_KEY ?? 'YOUR_client_KEY',
+      },
+      { stream: true, model: 'claude-1-100k' },
+    );
+  } else if (
+    process.env.AWS_BEDROCK_ACCESS_KEY &&
+    process.env.AWS_BEDROCK_SECRET_KEY
+  ) {
+    client = new AnthropicBedrockChatApi({
+      accessKeyId: process.env.AWS_BEDROCK_ACCESS_KEY ?? 'YOUR_access_key',
+      secretAccessKey: process.env.AWS_BEDROCK_SECRET_KEY ?? 'YOUR_secret_key',
+    });
+  }
 
   const res0 = await client?.textCompletion('Hello', {
     systemMessage: 'You will respond to all human messages in JSON',

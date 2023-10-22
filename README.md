@@ -204,7 +204,7 @@ const conf = {
   secretAccessKey: 'AWS_SECRET_KEY',
 };
 
-const anthropicBedrock = new AnthropicBedrockChat(conf);
+const anthropicBedrock = new AnthropicBedrockChatApi(params: BedrockConfig, config: ModelConfig);
 ```
 
 ## 🤓 Debugging
