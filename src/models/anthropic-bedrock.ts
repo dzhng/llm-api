@@ -142,7 +142,8 @@ export class AnthropicBedrockChatApi implements CompletionApi {
     } else {
       const command = new InvokeModelCommand(params);
       const response = await this._client.send(command, options);
-      completion = new TextDecoder().decode(response.body);
+      const decoded = JSON.parse(new TextDecoder().decode(response.body));
+      completion = decoded['completion'];
       debug.log('🔽 completion received', completion);
     }
 

@@ -8,6 +8,7 @@ Fully typed chat APIs for OpenAI, Anthropic, and Azure's chat models for browser
 - [Usage](#-usage)
 - [Azure](#-azure)
 - [Anthropic](#-anthropic)
+- [Amazon Bedrock](#-amazon-bedrock)
 - [Debugging](#-debugging)
 
 ## 👋 Introduction
@@ -196,7 +197,7 @@ Anthropic's models have the unique advantage of a large 100k context window and 
 const anthropic = new AnthropicChatApi(params: AnthropicConfig, config: ModelConfig);
 ```
 
-## ❖ Anthropic Amazon Bedrock
+## ❖ Amazon Bedrock
 
 ```typescript
 const conf = {
@@ -204,7 +205,7 @@ const conf = {
   secretAccessKey: 'AWS_SECRET_KEY',
 };
 
-const anthropicBedrock = new AnthropicBedrockChatApi(params: BedrockConfig, config: ModelConfig);
+const bedrock = new AnthropicBedrockChatApi(params: BedrockConfig, config: ModelConfig);
 ```
 
 ## 🤓 Debugging

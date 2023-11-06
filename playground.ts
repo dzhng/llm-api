@@ -29,10 +29,14 @@ import {
     process.env.AWS_BEDROCK_ACCESS_KEY &&
     process.env.AWS_BEDROCK_SECRET_KEY
   ) {
-    client = new AnthropicBedrockChatApi({
-      accessKeyId: process.env.AWS_BEDROCK_ACCESS_KEY ?? 'YOUR_access_key',
-      secretAccessKey: process.env.AWS_BEDROCK_SECRET_KEY ?? 'YOUR_secret_key',
-    });
+    client = new AnthropicBedrockChatApi(
+      {
+        accessKeyId: process.env.AWS_BEDROCK_ACCESS_KEY ?? 'YOUR_access_key',
+        secretAccessKey:
+          process.env.AWS_BEDROCK_SECRET_KEY ?? 'YOUR_secret_key',
+      },
+      { stream: false, model: 'anthropic.claude-v2' },
+    );
   }
 
   const res0 = await client?.textCompletion('Hello', {
