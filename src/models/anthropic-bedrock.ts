@@ -119,7 +119,10 @@ export class AnthropicBedrockChatApi implements CompletionApi {
         for await (const event of events || []) {
           // Check the top-level field to determine which event this is.
           if (event.chunk) {
-            const text = new TextDecoder().decode(event.chunk.bytes);
+            const decoded = JSON.parse(
+              new TextDecoder().decode(event.chunk.bytes),
+            );
+            const text = decoded['completion'];
             debug.write(text);
             completion += text;
             finalRequestOptions?.events?.emit('data', text);

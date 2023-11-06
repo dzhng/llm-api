@@ -35,7 +35,7 @@ import {
         secretAccessKey:
           process.env.AWS_BEDROCK_SECRET_KEY ?? 'YOUR_secret_key',
       },
-      { stream: false, temperature: 0, model: 'anthropic.claude-v2' },
+      { stream: true, temperature: 0, model: 'anthropic.claude-v2' },
     );
   }
 
