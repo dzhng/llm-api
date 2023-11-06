@@ -23,7 +23,7 @@ import {
       {
         apiKey: process.env.ANTHROPIC_KEY ?? 'YOUR_client_KEY',
       },
-      { stream: true, model: 'claude-1-100k' },
+      { stream: true, temperature: 0, model: 'claude-2' },
     );
   } else if (
     process.env.AWS_BEDROCK_ACCESS_KEY &&
@@ -35,7 +35,7 @@ import {
         secretAccessKey:
           process.env.AWS_BEDROCK_SECRET_KEY ?? 'YOUR_secret_key',
       },
-      { stream: false, model: 'anthropic.claude-v2' },
+      { stream: false, temperature: 0, model: 'anthropic.claude-v2' },
     );
   }
 
