@@ -5,6 +5,7 @@ import type {
   ChatRequestMessage,
   ChatResponse,
 } from '../types';
+
 import type { CompletionApi } from './interface';
 
 /**
