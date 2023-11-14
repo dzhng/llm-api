@@ -299,13 +299,18 @@ export class OpenAIChatApi implements CompletionApi {
       }
 
       if (content) {
+        const receivedMessage: ChatRequestMessage = {
+          role: 'assistant',
+          content,
+        };
         return {
+          message: receivedMessage,
           content,
           respond: (message: string | ChatRequestMessage, opt) =>
             this.chatCompletion(
               [
                 ...messages,
-                { role: 'assistant', content },
+                receivedMessage,
                 typeof message === 'string'
                   ? { role: 'user', content: message }
                   : message,
@@ -321,18 +326,20 @@ export class OpenAIChatApi implements CompletionApi {
             : undefined,
         };
       } else if (functionCall) {
+        const receivedMessage: ChatRequestMessage = {
+          role: 'assistant',
+          content: '', // explicitly put empty string, or api will complain it's required property
+          function_call: functionCall,
+        };
         return {
+          message: receivedMessage,
           name: functionCall.name,
           arguments: parseUnsafeJson(functionCall.arguments),
           respond: (message: string | ChatRequestMessage, opt) =>
             this.chatCompletion(
               [
                 ...messages,
-                {
-                  role: 'assistant',
-                  content: '', // explicitly put empty string, or api will complain it's required property
-                  function_call: functionCall,
-                },
+                receivedMessage,
                 typeof message === 'string'
                   ? { role: 'user', content: message }
                   : message,

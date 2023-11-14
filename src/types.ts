@@ -85,6 +85,9 @@ export interface ChatRequestFunctionCall {
 }
 
 export type ChatResponse = {
+  // the raw message object that was received
+  message: ChatRequestMessage;
+
   content?: string;
 
   // name and argument used for function reponse

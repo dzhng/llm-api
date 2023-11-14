@@ -158,13 +158,18 @@ export class AnthropicBedrockChatApi implements CompletionApi {
       throw new Error('Completion response malformed');
     }
 
+    const receivedMessage: ChatRequestMessage = {
+      role: 'assistant',
+      content,
+    };
     return {
+      message: receivedMessage,
       content,
       respond: (message: string | ChatRequestMessage, opt) =>
         this.chatCompletion(
           [
             ...messages,
-            { role: 'assistant', content },
+            receivedMessage,
             typeof message === 'string'
               ? { role: 'user', content: message }
               : message,
