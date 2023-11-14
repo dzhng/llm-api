@@ -93,6 +93,10 @@ export class MockOpenAIChatApi implements CompletionApi {
     }
 
     return Promise.resolve({
+      message: {
+        role: 'assistant',
+        content: 'Test Content, this is a chat completion',
+      },
       content: 'Test Content, this is a chat completion',
       name: 'TestName',
       arguments: {},
@@ -118,6 +122,10 @@ export class MockOpenAIChatApi implements CompletionApi {
     }
 
     return Promise.resolve({
+      message: {
+        role: 'assistant',
+        content: 'Test Content, this is a text completion',
+      },
       content: 'Test Content, this is a text completion',
       name: 'TestName',
       arguments: {},
