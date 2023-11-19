@@ -22,7 +22,6 @@ export interface ModelConfig {
   maxTokens?: number;
   temperature?: number;
   topP?: number;
-  stop?: string | string[];
   presencePenalty?: number;
   frequencyPenalty?: number;
   logitBias?: Record<string, number>;
@@ -48,6 +47,9 @@ export type ModelRequestOptions = {
   // the response prefix WILL be appended to the model response.
   // for Anthropic's models ONLY
   responsePrefix?: string;
+
+  // stop tokens to use
+  stop?: string | string[];
 
   // function related parameters are for OpenAI's models ONLY
   functions?: ModelFunction[];

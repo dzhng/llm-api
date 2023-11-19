@@ -42,7 +42,6 @@ const convertConfig = (
   temperature: config.temperature,
   top_p: config.topP,
   n: 1,
-  stop: config.stop,
   presence_penalty: config.presencePenalty,
   frequency_penalty: config.frequencyPenalty,
   logit_bias: config.logitBias,
@@ -175,6 +174,7 @@ export class OpenAIChatApi implements CompletionApi {
           model: DefaultOpenAIModel,
           ...convertConfig(this.modelConfig),
           max_tokens: maxTokens,
+          stop: finalRequestOptions.stop,
           functions: finalRequestOptions.functions,
           function_call: finalRequestOptions.callFunction
             ? { name: finalRequestOptions.callFunction }

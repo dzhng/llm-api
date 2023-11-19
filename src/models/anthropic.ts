@@ -121,9 +121,9 @@ export class AnthropicChatApi implements CompletionApi {
     let completion = '';
     const completionBody = {
       stop_sequences:
-        typeof this.modelConfig.stop === 'string'
-          ? [this.modelConfig.stop]
-          : this.modelConfig.stop,
+        typeof finalRequestOptions.stop === 'string'
+          ? [finalRequestOptions.stop]
+          : finalRequestOptions.stop,
       temperature: this.modelConfig.temperature,
       top_p: this.modelConfig.topP,
       model: this.modelConfig.model ?? DefaultAnthropicModel,

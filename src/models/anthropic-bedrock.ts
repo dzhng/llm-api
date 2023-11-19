@@ -87,9 +87,9 @@ export class AnthropicBedrockChatApi implements CompletionApi {
         temperature: this.modelConfig.temperature,
         top_p: this.modelConfig.topP || 1,
         stop_sequences:
-          typeof this.modelConfig.stop === 'string'
-            ? [this.modelConfig.stop]
-            : this.modelConfig.stop,
+          typeof finalRequestOptions.stop === 'string'
+            ? [finalRequestOptions.stop]
+            : finalRequestOptions.stop,
         anthropic_version: 'bedrock-2023-05-31',
       }),
     };
