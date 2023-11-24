@@ -1,9 +1,6 @@
+import 'openai/shims/web';
 import { defaults } from 'lodash';
-import {
-  Configuration,
-  CreateChatCompletionRequest,
-  OpenAIApi,
-} from 'openai-edge';
+import { OpenAI } from 'openai';
 
 import {
   CompletionDefaultRetries,
@@ -50,45 +47,29 @@ const convertConfig = (
 });
 
 export class OpenAIChatApi implements CompletionApi {
-  _client: OpenAIApi;
+  client: OpenAI;
   _isAzure: boolean;
   _headers?: Record<string, string>;
   modelConfig: ModelConfig;
 
   constructor(config: OpenAIConfig, modelConfig?: ModelConfig) {
     this._isAzure = Boolean(config.azureEndpoint && config.azureDeployment);
-
-    const configuration = new Configuration({
+    this.client = new OpenAI({
       ...config,
-      basePath: this._isAzure
+      baseURL: this._isAzure
         ? `${config.azureEndpoint}${
             config.azureEndpoint?.at(-1) === '/' ? '' : '/'
           }openai/deployments/${config.azureDeployment}`
         : undefined,
+      defaultHeaders: this._isAzure
+        ? { 'api-key': String(config.apiKey) }
+        : undefined,
+      defaultQuery: this._isAzure
+        ? {
+            'api-version': config.azureApiVersion ?? DefaultAzureVersion,
+          }
+        : undefined,
     });
-
-    this._headers = this._isAzure
-      ? { 'api-key': String(config.apiKey) }
-      : undefined;
-
-    const azureQueryParams = {
-      'api-version': config.azureApiVersion ?? DefaultAzureVersion,
-    };
-    const azureFetch: typeof globalThis.fetch = (input, init) => {
-      const customInput =
-        typeof input === 'string'
-          ? `${input}?${new URLSearchParams(azureQueryParams)}`
-          : input instanceof URL
-          ? `${input.toString()}?${new URLSearchParams(azureQueryParams)}`
-          : input;
-      return fetch(customInput, init);
-    };
-
-    this._client = new OpenAIApi(
-      configuration,
-      undefined,
-      this._isAzure ? azureFetch : undefined,
-    );
 
     this.modelConfig = modelConfig ?? {};
   }
@@ -169,7 +150,7 @@ export class OpenAIChatApi implements CompletionApi {
         );
       }
 
-      const completion = await this._client.createChatCompletion(
+      const completion = await this.client.completions.create(
         {
           model: DefaultOpenAIModel,
           ...convertConfig(this.modelConfig),

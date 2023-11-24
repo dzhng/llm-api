@@ -1,7 +1,7 @@
 {
   "name": "llm-api",
   "description": "Fully typed chat APIs for OpenAI and Azure's chat models - with token checking and retries",
-  "version": "0.9.9",
+  "version": "1.0.0",
   "packageManager": "yarn@3.4.1",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -49,7 +49,7 @@
     "jsonic": "^1.0.1",
     "jsonrepair": "^3.4.0",
     "lodash": "^4.17.21",
-    "openai-edge": "^1.2.2",
+    "openai": "^4.20.0",
     "type-fest": "^4.6.0"
   },
   "devDependencies": {

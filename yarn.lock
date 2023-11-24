@@ -5597,7 +5597,7 @@ __metadata:
     jsonrepair: ^3.4.0
     lint-staged: ^15.0.2
     lodash: ^4.17.21
-    openai-edge: ^1.2.2
+    openai: ^4.20.0
     prettier: ^2.8.0
     ts-jest: ^29.1.1
     ts-node: ^10.9.1
@@ -6186,10 +6186,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai-edge@npm:^1.2.2":
-  version: 1.2.2
-  resolution: "openai-edge@npm:1.2.2"
-  checksum: 9d6ff6e79fbad5a0f2b6dd5db75abeb489dfa530f3e14a664500856497c1e19f6ec24036c2988cd3194f3ce38325214112d6f4c9766743497a7e1c69bf2f5f39
+"openai@npm:^4.20.0":
+  version: 4.20.0
+  resolution: "openai@npm:4.20.0"
+  dependencies:
+    "@types/node": ^18.11.18
+    "@types/node-fetch": ^2.6.4
+    abort-controller: ^3.0.0
+    agentkeepalive: ^4.2.1
+    digest-fetch: ^1.3.0
+    form-data-encoder: 1.7.2
+    formdata-node: ^4.3.2
+    node-fetch: ^2.6.7
+    web-streams-polyfill: ^3.2.1
+  bin:
+    openai: bin/cli
+  checksum: 4ef466562ed6f65ea841ec81549d06fa10877628582ed201fe1d0259bb1d86432b6a81d9ff02c49d1f328ec96ef0131d54add3826277b64098ba55ea1028b2f0
   languageName: node
   linkType: hard
 

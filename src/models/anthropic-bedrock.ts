@@ -38,7 +38,7 @@ const RequestDefaults = {
 
 export class AnthropicBedrockChatApi implements CompletionApi {
   modelConfig: ModelConfig;
-  _client: BedrockRuntime;
+  client: BedrockRuntime;
 
   constructor(
     config: BedrockRuntimeClientConfig['credentials'],
@@ -46,7 +46,7 @@ export class AnthropicBedrockChatApi implements CompletionApi {
   ) {
     this.modelConfig = modelConfig ?? {};
 
-    this._client = new BedrockRuntime({
+    this.client = new BedrockRuntime({
       region: 'us-east-1',
       serviceId: 'bedrock-runtime',
       credentials: config,
@@ -101,7 +101,7 @@ export class AnthropicBedrockChatApi implements CompletionApi {
 
     if (this.modelConfig.stream) {
       try {
-        const result = await this._client.invokeModelWithResponseStream(
+        const result = await this.client.invokeModelWithResponseStream(
           params,
           options,
         );
@@ -144,7 +144,7 @@ export class AnthropicBedrockChatApi implements CompletionApi {
       }
     } else {
       const command = new InvokeModelCommand(params);
-      const response = await this._client.send(command, options);
+      const response = await this.client.send(command, options);
       const decoded = JSON.parse(new TextDecoder().decode(response.body));
       completion = decoded['completion'];
       debug.log('🔽 completion received', completion);

@@ -1,13 +1,11 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { ClientOptions as AnthropicClientOptions } from '@anthropic-ai/sdk';
 import EventEmitter from 'events';
-import { ConfigurationParameters as OAIConfig } from 'openai-edge';
+import { ClientOptions as OpenAIClientOptions } from 'openai';
 import { JsonValue } from 'type-fest';
 
-export type AnthropicConfig = NonNullable<
-  ConstructorParameters<typeof Anthropic>[0]
->;
+export type AnthropicConfig = AnthropicClientOptions;
 
-export type OpenAIConfig = OAIConfig & {
+export type OpenAIConfig = OpenAIClientOptions & {
   azureEndpoint?: string;
   azureDeployment?: string;
   azureApiVersion?: string;

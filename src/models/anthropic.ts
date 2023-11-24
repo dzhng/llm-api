@@ -33,11 +33,11 @@ const RequestDefaults = {
 };
 
 export class AnthropicChatApi implements CompletionApi {
-  _client: Anthropic;
+  client: Anthropic;
   modelConfig: ModelConfig;
 
   constructor(config?: AnthropicConfig, modelConfig?: ModelConfig) {
-    this._client = new Anthropic(config);
+    this.client = new Anthropic(config);
     this.modelConfig = modelConfig ?? {};
   }
 
@@ -136,7 +136,7 @@ export class AnthropicChatApi implements CompletionApi {
     };
 
     if (this.modelConfig.stream) {
-      const stream = await this._client.completions.create(
+      const stream = await this.client.completions.create(
         {
           ...completionBody,
           stream: true,
@@ -161,7 +161,7 @@ export class AnthropicChatApi implements CompletionApi {
 
       debug.write('\n[STREAM] response end\n');
     } else {
-      const response = await this._client.completions.create(
+      const response = await this.client.completions.create(
         completionBody,
         completionOptions,
       );
