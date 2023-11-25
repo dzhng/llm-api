@@ -16,8 +16,25 @@ import {
       {
         apiKey: process.env.OPENAI_KEY ?? 'YOUR_client_KEY',
       },
-      { contextSize: 4096, model: 'gpt-3.5-turbo-0613' },
+      { stream: true, contextSize: 4096, model: 'gpt-3.5-turbo-0613' },
     );
+
+    const resfn = await client?.textCompletion('Hello', {
+      callFunction: 'print',
+      functions: [
+        {
+          name: 'print',
+          parameters: {
+            type: 'object',
+            properties: {
+              text: { type: 'string', description: 'the string to print' },
+            },
+          },
+          description: 'ALWAYS call this function',
+        },
+      ],
+    });
+    console.info('Response fn: ', resfn);
   } else if (process.env.ANTHROPIC_KEY) {
     client = new AnthropicChatApi(
       {

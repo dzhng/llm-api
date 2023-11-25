@@ -10,7 +10,6 @@ import {
   DefaultAzureVersion,
   DefaultOpenAIModel,
   MinimumResponseTokens,
-  RateLimitRetryIntervalMs,
 } from '../config';
 import type {
   ModelRequestOptions,
@@ -27,7 +26,6 @@ import { getTikTokenTokensFromPrompt } from './tokenizer';
 
 const RequestDefaults = {
   retries: CompletionDefaultRetries,
-  retryInterval: RateLimitRetryIntervalMs,
   timeout: CompletionDefaultTimeout,
   minimumResponseTokens: MinimumResponseTokens,
   // NOTE: this is left without defaults by design - OpenAI's API will throw an error if max_token values is greater than model context size, which means it needs to be different for every model and cannot be set as a default. This fine since OpenAI won't put any limit on max_tokens if it's not set anyways (unlike Anthropic).
@@ -159,7 +157,7 @@ export class OpenAIChatApi implements CompletionApi {
         : undefined,
       messages: messages.map((m) => ({
         role: m.role,
-        name: m.name ?? '',
+        name: (m.role === 'function' ? m.name : undefined) as any,
         content: m.content ?? null,
         function_call: m.function_call,
       })),
@@ -196,7 +194,11 @@ export class OpenAIChatApi implements CompletionApi {
           completion += text;
           finalRequestOptions?.events?.emit('data', text);
         } else if (call) {
-          debug.write(`${call.name}: ${call.arguments}`);
+          debug.write(
+            call.name
+              ? `${call.name}: ${call.arguments}\n`
+              : call.arguments ?? '',
+          );
           functionCallStreamParts.push(call);
         }
       }

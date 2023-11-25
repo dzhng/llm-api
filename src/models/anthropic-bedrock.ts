@@ -12,7 +12,6 @@ import {
   CompletionDefaultTimeout,
   MaximumResponseTokens,
   MinimumResponseTokens,
-  RateLimitRetryIntervalMs,
 } from '../config';
 import {
   ChatRequestMessage,
@@ -30,7 +29,6 @@ const ForbiddenTokens = [HUMAN_PROMPT.trim(), AI_PROMPT.trim()];
 
 const RequestDefaults = {
   retries: CompletionDefaultRetries,
-  retryInterval: RateLimitRetryIntervalMs,
   timeout: CompletionDefaultTimeout,
   minimumResponseTokens: MinimumResponseTokens,
   maximumResponseTokens: MaximumResponseTokens,
