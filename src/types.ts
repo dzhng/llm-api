@@ -32,10 +32,10 @@ export interface ModelConfig {
 
 export type ModelFunction = {
   name: string;
-  description?: string;
-  parameters?: {
+  parameters: {
     [key: string]: any;
   };
+  description?: string;
 };
 
 export type ModelRequestOptions = {
@@ -80,8 +80,8 @@ export interface ChatRequestMessage {
 }
 
 export interface ChatRequestFunctionCall {
-  name?: string;
-  arguments?: string;
+  name: string;
+  arguments: string;
 }
 
 export type ChatResponse = {
