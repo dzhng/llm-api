@@ -84,7 +84,7 @@ export class AnthropicChatApi implements CompletionApi {
             case 'assistant':
               return `${AI_PROMPT} ${message.content}`;
             case 'system':
-              return `${HUMAN_PROMPT} ${message.content}`;
+              return message.content;
             default:
               throw new Error(
                 `Anthropic models do not support message with the role ${message.role}`,
