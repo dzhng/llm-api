@@ -281,6 +281,7 @@ export class OpenAIChatApi implements CompletionApi {
       };
       return {
         message: receivedMessage,
+        toolCallId: toolCall.id,
         name: toolCall.function.name,
         arguments: parseUnsafeJson(toolCall.function.arguments),
         respond: (message: string | ChatRequestMessage, opt) =>
