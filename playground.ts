@@ -16,7 +16,7 @@ import {
       {
         apiKey: process.env.OPENAI_KEY ?? 'YOUR_client_KEY',
       },
-      { stream: true, contextSize: 4096, model: 'gpt-3.5-turbo-0613' },
+      { stream: true, contextSize: 4096, model: 'gpt-4-1106-preview' },
     );
 
     const resfn = await client?.textCompletion('Hello', {
@@ -74,11 +74,19 @@ import {
     { role: 'user', content: 'hello' },
     {
       role: 'assistant',
-      content: '',
-      function_call: {
-        name: 'print',
-        arguments: '{"hello": "world"}',
+      toolCall: {
+        id: '1',
+        type: 'function',
+        function: {
+          name: 'print',
+          arguments: '{"hello": "world"}',
+        },
       },
+    },
+    {
+      role: 'tool',
+      toolCallId: '1',
+      content: '{ success: true }',
     },
   ]);
   console.info('Response 2: ', res2);

@@ -70,18 +70,22 @@ export type ModelRequestOptions = {
   events?: EventEmitter;
 };
 
-export type ChatRequestRole = 'system' | 'user' | 'assistant' | 'function';
+export type ChatRequestRole = 'system' | 'user' | 'assistant' | 'tool';
 
 export interface ChatRequestMessage {
   role: ChatRequestRole;
   content?: string;
-  name?: string;
-  function_call?: ChatRequestFunctionCall;
+  toolCall?: ChatRequestToolCall; // used to respond to `assistant` type messages
+  toolCallId?: string; // used to respond to `tool` type messages
 }
 
-export interface ChatRequestFunctionCall {
-  name: string;
-  arguments: string;
+export interface ChatRequestToolCall {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string;
+  };
 }
 
 export type ChatResponse = {
@@ -91,6 +95,7 @@ export type ChatResponse = {
   content?: string;
 
   // name and argument used for function reponse
+  toolCallId?: string;
   name?: string;
   arguments?: JsonValue;
 

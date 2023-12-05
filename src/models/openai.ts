@@ -17,6 +17,7 @@ import type {
   OpenAIConfig,
   ChatRequestMessage,
   ChatResponse,
+  ChatRequestToolCall,
 } from '../types';
 import { debug, parseUnsafeJson } from '../utils';
 
@@ -142,25 +143,40 @@ export class OpenAIChatApi implements CompletionApi {
     }
 
     let completion = '';
-    let functionCall: { name: string; arguments: string } | undefined;
+    let toolCall: ChatRequestToolCall | undefined;
     let usage: CompletionUsage | undefined;
     const completionBody: ChatCompletionCreateParamsBase = {
       model: DefaultOpenAIModel,
       ...convertConfig(this.modelConfig),
       max_tokens: maxTokens,
       stop: finalRequestOptions.stop,
-      functions: finalRequestOptions.functions,
-      function_call: finalRequestOptions.callFunction
-        ? { name: finalRequestOptions.callFunction }
+      tools: finalRequestOptions.functions?.map((f) => ({
+        type: 'function',
+        function: f,
+      })),
+      tool_choice: finalRequestOptions.callFunction
+        ? {
+            type: 'function',
+            function: { name: finalRequestOptions.callFunction },
+          }
         : finalRequestOptions.functions
         ? 'auto'
         : undefined,
-      messages: messages.map((m) => ({
-        role: m.role,
-        name: (m.role === 'function' ? m.name : undefined) as any,
-        content: m.content ?? null,
-        function_call: m.function_call,
-      })),
+      messages: messages.map((m) =>
+        m.role === 'assistant'
+          ? {
+              role: 'assistant',
+              content: m.content ?? null,
+              tool_calls: m.toolCall ? [m.toolCall] : undefined,
+            }
+          : m.role === 'tool'
+          ? {
+              role: 'tool',
+              content: m.content ?? null,
+              tool_call_id: m.toolCallId ?? '',
+            }
+          : { role: m.role, content: m.content ?? null },
+      ),
     };
     const completionOptions = {
       timeout: finalRequestOptions.timeout,
@@ -181,13 +197,11 @@ export class OpenAIChatApi implements CompletionApi {
         );
       }
 
-      const functionCallStreamParts: Partial<
-        NonNullable<typeof functionCall>
-      >[] = [];
+      const toolCallStreamParts: Partial<ChatRequestToolCall>[] = [];
       for await (const part of stream) {
         const text = part.choices[0]?.delta?.content;
-        const call = part.choices[0]?.delta?.function_call as Partial<
-          typeof functionCall
+        const call = part.choices[0]?.delta?.tool_calls?.[0] as Partial<
+          typeof toolCall
         >;
         if (text) {
           debug.write(text);
@@ -195,23 +209,29 @@ export class OpenAIChatApi implements CompletionApi {
           finalRequestOptions?.events?.emit('data', text);
         } else if (call) {
           debug.write(
-            call.name
-              ? `${call.name}: ${call.arguments}\n`
-              : call.arguments ?? '',
+            call.function?.name
+              ? `${call.function.name}: ${call.function.arguments}\n`
+              : call.id ?? '',
           );
-          functionCallStreamParts.push(call);
+          toolCallStreamParts.push(call);
         }
       }
 
       // finalize function call data from all parts from stream
-      if (functionCallStreamParts.length > 0) {
-        functionCall = functionCallStreamParts.reduce(
+      if (toolCallStreamParts.length > 0) {
+        toolCall = toolCallStreamParts.reduce(
           (prev, part) => ({
-            name: (prev.name ?? '') + (part.name ?? ''),
-            arguments: (prev.arguments ?? '') + (part.arguments ?? ''),
+            id: prev.id ?? part.id,
+            type: prev.type ?? part.type,
+            function: {
+              name: (prev.function?.name ?? '') + (part.function?.name ?? ''),
+              arguments:
+                (prev.function?.arguments ?? '') +
+                (part.function?.arguments ?? ''),
+            },
           }),
           {},
-        ) as { name: string; arguments: string };
+        ) as ChatRequestToolCall;
       }
 
       debug.write('\n[STREAM] response end\n');
@@ -221,7 +241,7 @@ export class OpenAIChatApi implements CompletionApi {
         completionOptions,
       );
       completion = response.choices[0].message.content ?? '';
-      functionCall = response.choices[0].message.function_call;
+      toolCall = response.choices[0].message.tool_calls?.[0];
       usage = response.usage;
       debug.log('🔽 completion received', completion);
     }
@@ -253,23 +273,24 @@ export class OpenAIChatApi implements CompletionApi {
             }
           : undefined,
       };
-    } else if (functionCall) {
+    } else if (toolCall) {
       const receivedMessage: ChatRequestMessage = {
         role: 'assistant',
         content: '', // explicitly put empty string, or api will complain it's required property
-        function_call: functionCall,
+        toolCall,
       };
       return {
         message: receivedMessage,
-        name: functionCall.name,
-        arguments: parseUnsafeJson(functionCall.arguments),
+        name: toolCall.function.name,
+        arguments: parseUnsafeJson(toolCall.function.arguments),
         respond: (message: string | ChatRequestMessage, opt) =>
           this.chatCompletion(
             [
               ...messages,
               receivedMessage,
+              // NOTE: all tool call messages must be followed up by a `tool` type message
               typeof message === 'string'
-                ? { role: 'user', content: message }
+                ? { role: 'tool', toolCallId: toolCall?.id, content: message }
                 : message,
             ],
             opt ?? requestOptions,
