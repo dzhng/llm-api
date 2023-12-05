@@ -185,8 +185,8 @@ export class OpenAIChatApi implements CompletionApi {
         NonNullable<typeof functionCall>
       >[] = [];
       for await (const part of stream) {
-        const text = part.choices[0].delta.content;
-        const call = part.choices[0].delta.function_call as Partial<
+        const text = part.choices[0]?.delta?.content;
+        const call = part.choices[0]?.delta?.function_call as Partial<
           typeof functionCall
         >;
         if (text) {
