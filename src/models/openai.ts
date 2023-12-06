@@ -209,8 +209,10 @@ export class OpenAIChatApi implements CompletionApi {
           finalRequestOptions?.events?.emit('data', text);
         } else if (call) {
           debug.write(
-            call.function?.name
-              ? `${call.function.name}: ${call.function.arguments}\n`
+            call.function
+              ? call.function.name
+                ? `${call.function.name}: ${call.function.arguments}\n`
+                : call.function.arguments
               : call.id ?? '',
           );
           toolCallStreamParts.push(call);
