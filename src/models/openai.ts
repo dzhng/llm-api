@@ -18,6 +18,7 @@ import type {
   ChatRequestMessage,
   ChatResponse,
   ChatRequestToolCall,
+  RateLimits,
 } from '../types';
 import { debug, parseUnsafeJson } from '../utils';
 
@@ -145,6 +146,7 @@ export class OpenAIChatApi implements CompletionApi {
     let completion = '';
     let toolCall: ChatRequestToolCall | undefined;
     let usage: CompletionUsage | undefined;
+    let rateLimits: RateLimits | undefined;
     const completionBody: ChatCompletionCreateParamsBase = {
       model: DefaultOpenAIModel,
       ...convertConfig(this.modelConfig),
@@ -238,13 +240,48 @@ export class OpenAIChatApi implements CompletionApi {
 
       debug.write('\n[STREAM] response end\n');
     } else {
-      const response = await this.client.chat.completions.create(
-        { ...completionBody, stream: false },
-        completionOptions,
+      const { response, data } = await this.client.chat.completions
+        .create({ ...completionBody, stream: false }, completionOptions)
+        .withResponse();
+      completion = data.choices[0].message.content ?? '';
+      toolCall = data.choices[0].message.tool_calls?.[0];
+      usage = data.usage;
+
+      const requestsLimit = Number(
+        response.headers.get('x-ratelimit-limit-requests'),
       );
-      completion = response.choices[0].message.content ?? '';
-      toolCall = response.choices[0].message.tool_calls?.[0];
-      usage = response.usage;
+      const tokensLimit = Number(
+        response.headers.get('x-ratelimit-limit-tokens'),
+      );
+      const remainingRequests = Number(
+        response.headers.get('x-ratelimit-remaining-requests'),
+      );
+      const remainingTokens = Number(
+        response.headers.get('x-ratelimit-remaining-tokens'),
+      );
+      const requestsLimitResetsIn = response.headers.get(
+        'x-ratelimit-reset-requests',
+      );
+      const tokensLimitResetsIn = response.headers.get(
+        'x-ratelimit-reset-tokens',
+      );
+
+      if (
+        !isNaN(requestsLimit) &&
+        !isNaN(tokensLimit) &&
+        !isNaN(remainingRequests) &&
+        !isNaN(remainingTokens) &&
+        requestsLimitResetsIn &&
+        tokensLimitResetsIn
+      )
+        rateLimits = {
+          requestsLimit,
+          tokensLimit,
+          remainingRequests,
+          remainingTokens,
+          requestsLimitResetsIn,
+          tokensLimitResetsIn,
+        };
       debug.log('🔽 completion received', completion);
     }
 
@@ -274,6 +311,7 @@ export class OpenAIChatApi implements CompletionApi {
               completionTokens: usage.completion_tokens,
             }
           : undefined,
+        rateLimits,
       };
     } else if (toolCall) {
       const receivedMessage: ChatRequestMessage = {
