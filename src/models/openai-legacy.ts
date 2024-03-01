@@ -61,6 +61,8 @@ export class OpenAILegacyChatApi implements CompletionApi {
         ? `${config.azureEndpoint}${
             config.azureEndpoint?.at(-1) === '/' ? '' : '/'
           }openai/deployments/${config.azureDeployment}`
+        : config.baseURL
+        ? config.baseURL
         : undefined,
       defaultHeaders: this._isAzure
         ? { 'api-key': String(config.apiKey) }
