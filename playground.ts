@@ -40,7 +40,7 @@ import {
       {
         apiKey: process.env.ANTHROPIC_KEY ?? 'YOUR_client_KEY',
       },
-      { stream: true, temperature: 0, model: 'claude-2' },
+      { stream: true, temperature: 0, model: 'claude-3-sonnet-20240229' },
     );
   } else if (
     process.env.AWS_BEDROCK_ACCESS_KEY &&

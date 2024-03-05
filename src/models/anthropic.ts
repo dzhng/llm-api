@@ -97,12 +97,15 @@ export class AnthropicChatApi implements CompletionApi {
           ? finalRequestOptions.systemMessage
           : finalRequestOptions.systemMessage()
         : undefined,
-      messages: messages.map((m) => ({
-        role: (['user', 'assistant'].includes(m.role) ? m.role : 'user') as
-          | 'user'
-          | 'assistant',
-        content: m.content ?? '',
-      })),
+      // anthropic only supports user and assistant messages, filter all other ones out
+      messages: messages
+        .filter(
+          (m) => (m.role === 'user' || m.role === 'assistant') && m.content,
+        )
+        .map((m) => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content ?? '',
+        })),
     };
     const completionOptions = {
       timeout: finalRequestOptions.timeout,
