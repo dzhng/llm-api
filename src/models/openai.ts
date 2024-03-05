@@ -160,8 +160,8 @@ export class OpenAIChatApi implements CompletionApi {
             function: { name: finalRequestOptions.callFunction },
           }
         : finalRequestOptions.functions
-        ? 'auto'
-        : undefined,
+          ? 'auto'
+          : undefined,
       messages: messages.map((m) =>
         m.role === 'assistant'
           ? {
@@ -170,12 +170,12 @@ export class OpenAIChatApi implements CompletionApi {
               tool_calls: m.toolCall ? [m.toolCall] : undefined,
             }
           : m.role === 'tool'
-          ? {
-              role: 'tool',
-              content: m.content ?? '',
-              tool_call_id: m.toolCallId ?? '',
-            }
-          : { role: m.role, content: m.content ?? '' },
+            ? {
+                role: 'tool',
+                content: m.content ?? '',
+                tool_call_id: m.toolCallId ?? '',
+              }
+            : { role: m.role, content: m.content ?? '' },
       ),
     };
     const completionOptions = {
