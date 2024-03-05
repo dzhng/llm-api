@@ -1,6 +1,5 @@
 export * from './models/errors';
 export * from './models/openai';
-export * from './models/openai-legacy';
 export * from './models/anthropic';
 export * from './models/anthropic-bedrock';
 export * from './models/interface';
