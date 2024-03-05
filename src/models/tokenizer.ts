@@ -4,6 +4,7 @@ import { ModelFunction } from '../types';
 
 const encoder = tiktoken.getEncoding('cl100k_base');
 
+// NOTE: this is only accurate on OpenAI models, Anthropic uses a different tokenizer & format. But context windows are so large now anyways, it's probably good enough to just run an estimate.
 export function getTikTokenTokensFromPrompt(
   promptOrMessages: string[],
   functions?: ModelFunction[],

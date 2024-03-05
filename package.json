@@ -42,15 +42,15 @@
     "playground": "node -r tsconfig-paths/register -r ts-node/register playground"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.8.1",
+    "@anthropic-ai/sdk": "^0.16.1",
     "@aws-sdk/client-bedrock-runtime": "^3.427.0",
     "debug": "^4.3.4",
-    "js-tiktoken": "^1.0.7",
+    "js-tiktoken": "^1.0.10",
     "jsonic": "^1.0.1",
-    "jsonrepair": "^3.4.0",
+    "jsonrepair": "^3.6.0",
     "lodash": "^4.17.21",
-    "openai": "^4.20.0",
-    "type-fest": "^4.6.0"
+    "openai": "^4.28.4",
+    "type-fest": "^4.11.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.10",
