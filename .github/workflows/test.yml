@@ -22,6 +22,10 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node }}
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3 # docs https://pnpm.io/continuous-integration#github-actions
+        with:
+          version: 8 # Optional: specify a pnpm version
       - name: Install modules
         run: pnpm install
       - name: Run tests
