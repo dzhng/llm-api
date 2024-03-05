@@ -61,7 +61,7 @@ export class OpenAIChatApi implements CompletionApi {
         ? `${config.azureEndpoint}${
             config.azureEndpoint?.at(-1) === '/' ? '' : '/'
           }openai/deployments/${config.azureDeployment}`
-        : undefined,
+        : config.baseURL,
       defaultHeaders: this._isAzure
         ? { 'api-key': String(config.apiKey) }
         : undefined,
@@ -166,16 +166,16 @@ export class OpenAIChatApi implements CompletionApi {
         m.role === 'assistant'
           ? {
               role: 'assistant',
-              content: m.content ?? null,
+              content: m.content ?? '',
               tool_calls: m.toolCall ? [m.toolCall] : undefined,
             }
           : m.role === 'tool'
           ? {
               role: 'tool',
-              content: m.content ?? null,
+              content: m.content ?? '',
               tool_call_id: m.toolCallId ?? '',
             }
-          : { role: m.role, content: m.content ?? null },
+          : { role: m.role, content: m.content ?? '' },
       ),
     };
     const completionOptions = {

@@ -1,5 +1,6 @@
-import Anthropic, { AI_PROMPT, HUMAN_PROMPT } from '@anthropic-ai/sdk';
-import { defaults } from 'lodash';
+import Anthropic from '@anthropic-ai/sdk';
+import { MessageCreateParamsBase } from '@anthropic-ai/sdk/resources/messages';
+import { compact, defaults } from 'lodash';
 
 import {
   CompletionDefaultRetries,
@@ -20,8 +21,6 @@ import { debug } from '../utils';
 import { TokenError } from './errors';
 import { CompletionApi } from './interface';
 import { getTikTokenTokensFromPrompt } from './tokenizer';
-
-const ForbiddenTokens = [HUMAN_PROMPT.trim(), AI_PROMPT.trim()];
 
 const RequestDefaults = {
   retries: CompletionDefaultRetries,
@@ -48,57 +47,22 @@ export class AnthropicChatApi implements CompletionApi {
     requestOptions?: ModelRequestOptions | undefined,
   ): Promise<ChatResponse> {
     const finalRequestOptions = defaults(requestOptions, RequestDefaults);
-    const messages: ChatRequestMessage[] = (
-      finalRequestOptions.systemMessage
-        ? [
-            {
-              role: 'system',
-              content:
-                typeof finalRequestOptions.systemMessage === 'string'
-                  ? finalRequestOptions.systemMessage
-                  : finalRequestOptions.systemMessage(),
-            },
-            ...initialMessages,
-          ]
-        : initialMessages
-    ).map(
-      (message) =>
-        ({
-          ...message,
-          // automatically remove forbidden tokens in the input message to thwart prompt injection attacks
-          content:
-            message.content &&
-            ForbiddenTokens.reduce(
-              (prev, token) => prev.replaceAll(token, ''),
-              message.content,
-            ),
-        } as ChatRequestMessage),
-    );
-
-    const prompt =
-      messages
-        .map((message) => {
-          switch (message.role) {
-            case 'user':
-              return `${HUMAN_PROMPT} ${message.content}`;
-            case 'assistant':
-              return `${AI_PROMPT} ${message.content}`;
-            case 'system':
-              return message.content;
-            default:
-              throw new Error(
-                `Anthropic models do not support message with the role ${message.role}`,
-              );
-          }
-        })
-        .join('') +
-      AI_PROMPT +
-      (finalRequestOptions.responsePrefix
-        ? ` ${finalRequestOptions.responsePrefix}`
-        : '');
+    const messages: ChatRequestMessage[] = compact([
+      ...initialMessages,
+      // claude supports responsePrefix via prefill:
+      // https://docs.anthropic.com/claude/docs/prefill-claudes-response
+      finalRequestOptions.responsePrefix
+        ? ({
+            role: 'assistant',
+            content: finalRequestOptions.responsePrefix,
+          } as ChatRequestMessage)
+        : null,
+    ]);
 
     debug.log(
-      `🔼 completion requested:\n${prompt}\nconfig: ${JSON.stringify(
+      `🔼 completion requested: ${JSON.stringify(
+        messages,
+      )}, config: ${JSON.stringify(
         this.modelConfig,
       )}, options: ${JSON.stringify(finalRequestOptions)}`,
     );
@@ -108,7 +72,9 @@ export class AnthropicChatApi implements CompletionApi {
       ? this.modelConfig.contextSize - finalRequestOptions.minimumResponseTokens
       : 100_000;
 
-    const messageTokens = this.getTokensFromPrompt([prompt]);
+    const messageTokens = this.getTokensFromPrompt(
+      messages.map((m) => m.content ?? ''),
+    );
     if (messageTokens > maxPromptTokens) {
       throw new TokenError(
         'Prompt too big, not enough tokens to meet minimum response',
@@ -117,7 +83,7 @@ export class AnthropicChatApi implements CompletionApi {
     }
 
     let completion = '';
-    const completionBody = {
+    const completionBody: MessageCreateParamsBase = {
       stop_sequences:
         typeof finalRequestOptions.stop === 'string'
           ? [finalRequestOptions.stop]
@@ -125,8 +91,18 @@ export class AnthropicChatApi implements CompletionApi {
       temperature: this.modelConfig.temperature,
       top_p: this.modelConfig.topP,
       model: this.modelConfig.model ?? DefaultAnthropicModel,
-      max_tokens_to_sample: finalRequestOptions.maximumResponseTokens,
-      prompt,
+      max_tokens: finalRequestOptions.maximumResponseTokens,
+      system: finalRequestOptions.systemMessage
+        ? typeof finalRequestOptions.systemMessage === 'string'
+          ? finalRequestOptions.systemMessage
+          : finalRequestOptions.systemMessage()
+        : undefined,
+      messages: messages.map((m) => ({
+        role: (['user', 'assistant'].includes(m.role) ? m.role : 'user') as
+          | 'user'
+          | 'assistant',
+        content: m.content ?? '',
+      })),
     };
     const completionOptions = {
       timeout: finalRequestOptions.timeout,
@@ -134,7 +110,7 @@ export class AnthropicChatApi implements CompletionApi {
     };
 
     if (this.modelConfig.stream) {
-      const stream = await this.client.completions.create(
+      const stream = await this.client.messages.create(
         {
           ...completionBody,
           stream: true,
@@ -151,19 +127,34 @@ export class AnthropicChatApi implements CompletionApi {
       }
 
       for await (const part of stream) {
-        const text = part.completion;
-        debug.write(text);
-        completion += text;
-        finalRequestOptions?.events?.emit('data', text);
+        if (
+          part.type === 'content_block_start' &&
+          part.content_block.type === 'text' &&
+          part.index === 0
+        ) {
+          const text = part.content_block.text;
+          debug.write(text);
+          completion += text;
+          finalRequestOptions?.events?.emit('data', text);
+        } else if (
+          part.type === 'content_block_delta' &&
+          part.delta.type === 'text_delta' &&
+          part.index === 0
+        ) {
+          const text = part.delta.text;
+          debug.write(text);
+          completion += text;
+          finalRequestOptions?.events?.emit('data', text);
+        }
       }
 
       debug.write('\n[STREAM] response end\n');
     } else {
-      const response = await this.client.completions.create(
-        completionBody,
+      const response = await this.client.messages.create(
+        { ...completionBody, stream: false },
         completionOptions,
       );
-      completion = response.completion;
+      completion = response.content[0].text;
       debug.log('🔽 completion received', completion);
     }
 
