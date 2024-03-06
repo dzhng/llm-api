@@ -113,11 +113,8 @@ export class AnthropicChatApi implements CompletionApi {
     };
 
     if (this.modelConfig.stream) {
-      const stream = await this.client.messages.create(
-        {
-          ...completionBody,
-          stream: true,
-        },
+      const stream = await this.client.messages.stream(
+        completionBody,
         completionOptions,
       );
 
@@ -154,11 +151,14 @@ export class AnthropicChatApi implements CompletionApi {
       debug.write('\n[STREAM] response end\n');
     } else {
       const response = await this.client.messages.create(
-        { ...completionBody, stream: false },
+        completionBody,
         completionOptions,
       );
-      completion = response.content[0].text;
-      debug.log('🔽 completion received', completion);
+
+      if ('content' in response) {
+        completion = response.content[0].text;
+        debug.log('🔽 completion received', completion);
+      }
     }
 
     const content = finalRequestOptions.responsePrefix
