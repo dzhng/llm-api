@@ -1,0 +1,14 @@
+diff --git a/streaming.js b/streaming.js
+index 205f39eacf1a72de3c7c98931b29fd5ed5564b93..d6ab811bcc8b620faaa5b02053381255fb7cd5db 100644
+--- a/streaming.js
++++ b/streaming.js
+@@ -266,6 +266,9 @@ class LineDecoder {
+         }
+         const trailingNewline = LineDecoder.NEWLINE_CHARS.has(text[text.length - 1] || '');
+         let lines = text.split(LineDecoder.NEWLINE_REGEXP);
++        if (trailingNewline) {
++            lines.pop();
++        }
+         if (lines.length === 1 && !trailingNewline) {
+             this.buffer.push(lines[0]);
+             return [];
