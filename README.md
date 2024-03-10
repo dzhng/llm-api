@@ -8,6 +8,7 @@ Fully typed chat APIs for OpenAI, Anthropic, and Azure's chat models for browser
 - [Usage](#-usage)
 - [Azure](#-azure)
 - [Anthropic](#-anthropic)
+- [Groq](#-groq)
 - [Amazon Bedrock](#-amazon-bedrock)
 - [Debugging](#-debugging)
 
@@ -191,10 +192,18 @@ const openai = new OpenAIChatApi({
 
 ## 🔶 Anthropic
 
-Anthropic's models have the unique advantage of a large 100k context window and extremely fast performance. If no explicit model is specified, `llm-api` will default to the `claude-instant-1` model.
+Anthropic's models have the unique advantage of a large 100k context window and extremely fast performance. If no explicit model is specified, `llm-api` will default to the Claude Sonnet model.
 
 ```typescript
 const anthropic = new AnthropicChatApi(params: AnthropicConfig, config: ModelConfig);
+```
+
+## 🔶 Groq
+
+Groq is a new LLM inference provider that provides the fastest inference speed on the market. They currently support Meta's Llama 2 and Mistral's Mixtral models.
+
+```typescript
+const groq = new GroqChatApi(params: GroqConfig, config: ModelConfig);
 ```
 
 ## ❖ Amazon Bedrock
