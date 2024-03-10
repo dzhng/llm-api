@@ -1,7 +1,10 @@
 import { ClientOptions as AnthropicClientOptions } from '@anthropic-ai/sdk';
 import EventEmitter from 'events';
+import { ClientOptions as GroqClientOptions } from 'groq-sdk';
 import { ClientOptions as OpenAIClientOptions } from 'openai';
 import { JsonValue } from 'type-fest';
+
+export type GroqConfig = GroqClientOptions;
 
 export type AnthropicConfig = AnthropicClientOptions;
 

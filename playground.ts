@@ -3,12 +3,14 @@ import {
   AnthropicChatApi,
   OpenAIChatApi,
 } from './src';
+import { GroqChatApi } from './src/models/groq';
 
 (async function go() {
   let client:
     | OpenAIChatApi
     | AnthropicChatApi
     | AnthropicBedrockChatApi
+    | GroqChatApi
     | undefined;
 
   if (process.env.OPENAI_KEY) {
@@ -16,7 +18,7 @@ import {
       {
         apiKey: process.env.OPENAI_KEY ?? 'YOUR_client_KEY',
       },
-      { stream: true, contextSize: 4096, model: 'gpt-4-1106-preview' },
+      { stream: true, contextSize: 4096 },
     );
 
     const resfn = await client?.textCompletion('Hello', {
@@ -40,7 +42,7 @@ import {
       {
         apiKey: process.env.ANTHROPIC_KEY ?? 'YOUR_client_KEY',
       },
-      { stream: true, temperature: 0, model: 'claude-3-sonnet-20240229' },
+      { stream: true, temperature: 0 },
     );
   } else if (
     process.env.AWS_BEDROCK_ACCESS_KEY &&
@@ -54,6 +56,13 @@ import {
       },
       { stream: true, temperature: 0, model: 'anthropic.claude-v2' },
     );
+  } else if (process.env.GROQ_KEY) {
+    client = new GroqChatApi(
+      {
+        apiKey: process.env.GROQ_KEY ?? 'YOUR_client_KEY',
+      },
+      { stream: true, temperature: 0 },
+    );
   }
 
   const res0 = await client?.textCompletion('Hello', {
@@ -66,7 +75,7 @@ import {
   console.info('Response em: ', resEm);
 
   const res1 = await client?.textCompletion('Hello', {
-    maximumResponseTokens: 1,
+    maximumResponseTokens: 2,
   });
   console.info('Response 1: ', res1);
 
