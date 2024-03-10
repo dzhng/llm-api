@@ -40,8 +40,6 @@ export class GroqChatApi implements CompletionApi {
 
   getTokensFromPrompt = getTikTokenTokensFromPrompt;
 
-  // chat based prompting following these instructions:
-  // https://docs.anthropic.com/claude/reference/getting-started-with-the-api
   async chatCompletion(
     initialMessages: ChatRequestMessage[],
     requestOptions?: ModelRequestOptions | undefined,
@@ -58,8 +56,6 @@ export class GroqChatApi implements CompletionApi {
           }
         : null,
       ...initialMessages,
-      // claude supports responsePrefix via prefill:
-      // https://docs.anthropic.com/claude/docs/prefill-claudes-response
       finalRequestOptions.responsePrefix
         ? ({
             role: 'assistant',
