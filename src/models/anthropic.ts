@@ -179,7 +179,8 @@ export class AnthropicChatApi implements CompletionApi {
       respond: (message: string | ChatRequestMessage, opt) =>
         this.chatCompletion(
           [
-            ...messages,
+            // don't send the processed `messages` array, since that contains the prefill message which will cause multiple 'assistant' message error to be thrown
+            ...initialMessages,
             receivedMessage,
             typeof message === 'string'
               ? { role: 'user', content: message }

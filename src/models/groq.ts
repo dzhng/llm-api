@@ -45,7 +45,7 @@ export class GroqChatApi implements CompletionApi {
     requestOptions?: ModelRequestOptions | undefined,
   ): Promise<ChatResponse> {
     const finalRequestOptions = defaults(requestOptions, RequestDefaults);
-    const messages: ChatRequestMessage[] = compact([
+    const messagesWithSystem: ChatRequestMessage[] = compact([
       finalRequestOptions.systemMessage
         ? {
             role: 'system',
@@ -56,6 +56,9 @@ export class GroqChatApi implements CompletionApi {
           }
         : null,
       ...initialMessages,
+    ]);
+    const messages: ChatRequestMessage[] = compact([
+      ...messagesWithSystem,
       finalRequestOptions.responsePrefix
         ? ({
             role: 'assistant',
@@ -140,8 +143,12 @@ export class GroqChatApi implements CompletionApi {
       debug.log('🔽 completion received', completion);
     }
 
+    // for groq, since it doesn't support prefill out of the box, sometimes the response will contain the responsePrefix, sometimes it won't, so do this extra conditional here
+    // note that this means there IS an edge case where the user actually expects a response where the responsePrefix is repeated, but that seems like an edge case
     const content = finalRequestOptions.responsePrefix
-      ? finalRequestOptions.responsePrefix + completion
+      ? completion.startsWith(finalRequestOptions.responsePrefix)
+        ? completion
+        : finalRequestOptions.responsePrefix + completion
       : completion;
     if (!content) {
       throw new Error('Completion response malformed');
@@ -157,7 +164,8 @@ export class GroqChatApi implements CompletionApi {
       respond: (message: string | ChatRequestMessage, opt) =>
         this.chatCompletion(
           [
-            ...messages,
+            // don't use the `messages` array since that contains prefill message, which we want to remove when responding
+            ...messagesWithSystem,
             receivedMessage,
             typeof message === 'string'
               ? { role: 'user', content: message }

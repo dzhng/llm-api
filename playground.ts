@@ -71,6 +71,9 @@ import { GroqChatApi } from './src/models/groq';
   });
   console.info('Response 0: ', res0);
 
+  const res01 = await res0?.respond('Hello 2');
+  console.info('Response 0.1: ', res01);
+
   const resEm = await client?.textCompletion('✨');
   console.info('Response em: ', resEm);
 
