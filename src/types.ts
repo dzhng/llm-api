@@ -91,6 +91,49 @@ export interface ChatRequestToolCall {
   };
 }
 
+/**
+ * Rate limits exposed in response headers
+ * @see https://platform.openai.com/docs/guides/rate-limits/rate-limits-in-headers
+ */
+export interface RateLimits {
+  /**
+   * The maximum number of requests that are permitted before exhausting the rate limit.
+   * @header x-ratelimit-limit-requests
+   * @example 60
+   */
+  requestsLimit: number;
+  /**
+   * The maximum number of tokens that are permitted before exhausting the rate limit.
+   * @header x-ratelimit-limit-tokens
+   * @example 150000
+   */
+  tokensLimit: number;
+  /**
+   * The remaining number of requests that are permitted before exhausting the rate limit.
+   * @header x-ratelimit-remaining-requests
+   * @example 59
+   */
+  remainingRequests: number;
+  /**
+   * The remaining number of tokens that are permitted before exhausting the rate limit.
+   * @header x-ratelimit-remaining-tokens
+   * @example 149984
+   */
+  remainingTokens: number;
+  /**
+   * The time until the rate limit (based on requests) resets to its initial state.
+   * @header x-ratelimit-reset-requests
+   * @example 1s
+   */
+  requestsLimitResetsIn: string;
+  /**
+   * The time until the rate limit (based on tokens) resets to its initial state.
+   * @header x-ratelimit-reset-tokens
+   * @example 6m0s
+   */
+  tokensLimitResetsIn: string;
+}
+
 export type ChatResponse = {
   // the raw message object that was received
   message: ChatRequestMessage;
@@ -107,6 +150,7 @@ export type ChatResponse = {
     completionTokens: number;
     totalTokens: number;
   };
+  rateLimits?: RateLimits;
 
   // function to send another message in the same chat, this will automatically reuse all existing settings, and append a new message to the messages array
   respond: (
