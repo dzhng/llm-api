@@ -18,7 +18,7 @@ import { GroqChatApi } from './src/models/groq';
       {
         apiKey: process.env.OPENAI_KEY ?? 'YOUR_client_KEY',
       },
-      { stream: true, contextSize: 4096 },
+      { stream: true, contextSize: 4096, model: 'gpt-4-turbo' },
     );
 
     const resfn = await client?.textCompletion('Hello', {
