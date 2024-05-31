@@ -56,7 +56,6 @@ export class OpenAIChatApi implements CompletionApi {
   constructor(config: OpenAIConfig, modelConfig?: ModelConfig) {
     this._isAzure = Boolean(config.azureEndpoint && config.azureDeployment);
     this.client = new OpenAI({
-      ...config,
       baseURL: this._isAzure
         ? `${config.azureEndpoint}${
             config.azureEndpoint?.at(-1) === '/' ? '' : '/'
@@ -70,6 +69,7 @@ export class OpenAIChatApi implements CompletionApi {
             'api-version': config.azureApiVersion ?? DefaultAzureVersion,
           }
         : undefined,
+      ...config,
     });
 
     this.modelConfig = modelConfig ?? {};
