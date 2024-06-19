@@ -142,6 +142,15 @@ interface ModelResponse {
     totalTokens: number;
   };
 
+  rateLimits?: {
+    requestsLimit: number;
+    tokensLimit: number;
+    remainingRequests: number;
+    remainingTokens: number;
+    requestsLimitResetsIn: string;
+    tokensLimitResetsIn: string;
+  };
+
   // function to send another message in the same 'chat', this will automatically append a new message to the messages array
   respond: (
     message: ChatCompletionRequestMessage,
